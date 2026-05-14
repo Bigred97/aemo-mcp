@@ -2,10 +2,12 @@ id: daily_summary
 name: NEM Daily Summary (settled, prior trading day)
 description: |
   Daily rolled-up summary of the previous trading day's dispatch — settled
-  prices and demand by region. Source: PUBLIC_DAILY / DISPATCH.PRICE.
+  prices and demand by region. Source: PUBLIC_DAILY / DREGION.
 
   AEMO publishes a single compendium ZIP shortly after 04:10 AEST each day
   covering yesterday's full data, including post-AP (after-price) revisions.
+  Each row is one 5-min interval × region for the prior trading day, so a
+  single response has 288 intervals × 5 regions = 1,440 rows by default.
   Use this for backfill and "weekly average dispatch price for VIC, last 4
   weeks" type questions where you want settled values rather than the
   preliminary dispatch values served by `dispatch_price`.
@@ -18,7 +20,12 @@ folders:
   - path: /Reports/Current/Daily_Reports/
     filename_regex: "PUBLIC_DAILY_\\d{12}_\\d{14}\\.zip"
     sections:
-      - name: DISPATCH.PRICE
+      # AEMO emits the daily region rollup as I,DREGION,,2,... — the
+      # second cell is empty, so the parser builds the section name
+      # "DREGION." (trailing dot). DREGION. is repeated v2 + v3 in the
+      # same file for old vs new schema; we read both and dedupe by
+      # (REGIONID, SETTLEMENTDATE) downstream.
+      - name: DREGION.
 
 filters:
   - key: region
@@ -31,6 +38,18 @@ metrics:
     source_column: RRP
     description: Settled regional reference price ($/MWh)
     unit: $/MWh
+  - key: total_demand
+    source_column: TOTALDEMAND
+    description: Total demand at the interval (MW)
+    unit: MW
+  - key: dispatchable_generation
+    source_column: DISPATCHABLEGENERATION
+    description: Dispatchable generation (scheduled + semi-scheduled, MW)
+    unit: MW
+  - key: net_interchange
+    source_column: NETINTERCHANGE
+    description: Net interconnector flow (MW). Positive = export.
+    unit: MW
 
 search_keywords:
   - daily summary

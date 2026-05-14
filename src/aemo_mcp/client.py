@@ -107,6 +107,15 @@ class AEMOClient:
         except BaseException as e:
             if not future.done():
                 future.set_exception(e)
+            # When no other coroutine is awaiting this future, the
+            # exception we just set would be GC'd unretrieved and Python
+            # would log "Future exception was never retrieved". Mark it
+            # retrieved here — the calling coroutine still gets `raise` so
+            # the exception propagates normally.
+            try:
+                future.exception()
+            except Exception:
+                pass
             raise
         finally:
             async with self._in_flight_lock:

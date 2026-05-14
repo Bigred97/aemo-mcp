@@ -119,9 +119,20 @@ def parse_csv(body: bytes) -> list[Section]:
 
 
 def find_section(sections: list[Section], name: str) -> Section | None:
-    """Look up a section by case-insensitive name (e.g. 'DISPATCH.PRICE')."""
+    """Look up the first section matching a case-insensitive name."""
     norm = name.strip().upper()
     for s in sections:
         if s.name.upper() == norm:
             return s
     return None
+
+
+def find_sections(sections: list[Section], name: str) -> list[Section]:
+    """Return ALL sections matching a case-insensitive name.
+
+    Some AEMO files (notably the Daily compendium) include two versions of
+    the same section (e.g. DREGION. v2 and DREGION. v3 — old + new schema)
+    with the same data. The caller is responsible for deduping records.
+    """
+    norm = name.strip().upper()
+    return [s for s in sections if s.name.upper() == norm]

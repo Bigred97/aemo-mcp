@@ -1,4 +1,5 @@
 DUID,REGION,FUEL,STATION,OWNER
+# ============================ NSW1 (New South Wales) ============================
 BW01,NSW1,black_coal,Bayswater,AGL
 BW02,NSW1,black_coal,Bayswater,AGL
 BW03,NSW1,black_coal,Bayswater,AGL
@@ -17,14 +18,73 @@ URANQ11,NSW1,gas,Uranquinty,Snowy Hydro
 URANQ12,NSW1,gas,Uranquinty,Snowy Hydro
 URANQ13,NSW1,gas,Uranquinty,Snowy Hydro
 URANQ14,NSW1,gas,Uranquinty,Snowy Hydro
-HUMENSW,NSW1,hydro,Hume NSW,Snowy Hydro
+COLONGRA1,NSW1,gas,Colongra,Snowy Hydro
+COLONGRA2,NSW1,gas,Colongra,Snowy Hydro
+COLONGRA3,NSW1,gas,Colongra,Snowy Hydro
+COLONGRA4,NSW1,gas,Colongra,Snowy Hydro
+SITHE01,NSW1,gas,Smithfield,Marubeni
+HUNTER1,NSW1,gas,Hunter Valley,AGL
 TUMUT3,NSW1,hydro,Tumut 3,Snowy Hydro
 UPPTUMUT,NSW1,hydro,Upper Tumut,Snowy Hydro
-WALGRVG1,NSW1,battery,Wallgrove,AGL
+BLOWERIN,NSW1,hydro,Blowering,Snowy Hydro
+HUMENSW,NSW1,hydro,Hume NSW,Snowy Hydro
+GUTHEGA,NSW1,hydro,Guthega,Snowy Hydro
+SHGEN,NSW1,hydro,Shoalhaven,Origin Energy
+JOUNAMA,NSW1,hydro,Jounama,Snowy Hydro
+SHPOWER,NSW1,hydro,Snowy Adit,Snowy Hydro
 SAPPHWF1,NSW1,wind,Sapphire Wind Farm,Partners Group
 SILVSWF1,NSW1,wind,Silverton Wind Farm,Powering Australian Renewables
+BANGOWF1,NSW1,wind,Bango Wind Farm,CWP Renewables
+BANGOWF2,NSW1,wind,Bango Wind Farm,CWP Renewables
+BODWFNAR,NSW1,wind,Boco Rock,EnergyAustralia
+BOCORWF1,NSW1,wind,Boco Rock,EnergyAustralia
+BOORTHWF,NSW1,wind,Boorowa,Boorowa
+COPRTNWF,NSW1,wind,Capital,Infigen
+CROWWF1,NSW1,wind,Crookwell,Origin Energy
+CULLWF1,NSW1,wind,Cullerin Range,Origin Energy
+GLLNGWF1,NSW1,wind,Gullen Range,Goldwind
+GULLRWF1,NSW1,wind,Gullen Range,Goldwind
+GULLRWF2,NSW1,wind,Gullen Range,Goldwind
+NSWPRWF,NSW1,wind,Capital,Infigen
+RYE_PARK,NSW1,wind,Rye Park,Tilt Renewables
+TARALG,NSW1,wind,Taralga,CBI Power
+WHITEWF1,NSW1,wind,White Rock,Goldwind
+WOORNWF1,NSW1,wind,Woodlawn,Infigen
+COLLGAR,NSW1,wind,Collgar,UAC
 NEVERSF1,NSW1,solar,Nevertire Solar Farm,Edify Energy
 LIMOSF1,NSW1,solar,Limondale Solar Farm,Innogy
+BERYLSF1,NSW1,solar,Beryl Solar Farm,Innogy
+BERYLSF2,NSW1,solar,Beryl Solar Farm,Innogy
+BNGSF1,NSW1,solar,Bungala,Enel
+BOMENSF1,NSW1,solar,Bomen,Spark
+COLLINSF1,NSW1,solar,Collinsville,Ratch
+DARLISF1,NSW1,solar,Darlington Point,Octopus
+DUBBOSF,NSW1,solar,Dubbo,Edify
+FINLEYSF,NSW1,solar,Finley Solar Farm,Engie
+GANNSF1,NSW1,solar,Gannawarra Solar Farm,Edify
+GLENMG1,NSW1,solar,Glenrowan Solar Farm,Edify
+GULLRSF1,NSW1,solar,Gullen Range Solar,Goldwind
+MAYNSF1,NSW1,solar,Maynesee,Photon
+MOREESF1,NSW1,solar,Moree Solar Farm,Fotowatio
+NYNGAN1,NSW1,solar,Nyngan,AGL
+PARWE1,NSW1,solar,Parkes,Neoen
+PARWE2,NSW1,solar,Parkes,Neoen
+PARWE3,NSW1,solar,Parkes,Neoen
+SUNRPWF1,NSW1,solar,Sunraysia,Maoneng
+SUNRPWF2,NSW1,solar,Sunraysia,Maoneng
+WTRG1,NSW1,solar,Wattle Range,SunDrive
+WTRG2,NSW1,solar,Wattle Range,SunDrive
+NEOSF1,NSW1,solar,Neoen Western Downs,Neoen
+COLEAMS1,NSW1,solar,Coleambally,Neoen
+WALGRVG1,NSW1,battery,Wallgrove,AGL
+WALGRVL1,NSW1,battery,Wallgrove,AGL
+ULINDA,NSW1,battery,Ulinda Park BESS,Vena
+NHRG1,NSW1,battery,New Hope Energy,EnergyAustralia
+NHRL1,NSW1,battery,New Hope Energy,EnergyAustralia
+GBPL,NSW1,battery,Goldwind BESS,Goldwind
+RIVPS,NSW1,battery,Riverina,Edify
+BIPSL1,NSW1,battery,Bouldercombe BESS,Bouldercombe
+# ============================ QLD1 (Queensland) ============================
 CALL_A_4,QLD1,black_coal,Callide A,CS Energy
 CALL_B_1,QLD1,black_coal,Callide B,CS Energy
 CALL_B_2,QLD1,black_coal,Callide B,CS Energy
@@ -49,10 +109,72 @@ TARONG#3,QLD1,black_coal,Tarong,Stanwell Corp
 TARONG#4,QLD1,black_coal,Tarong,Stanwell Corp
 TNPS1,QLD1,black_coal,Tarong North,Stanwell Corp
 SWAN_B_1,QLD1,gas,Swanbank E,Stanwell Corp
+OAKEY1,QLD1,gas,Oakey,ERM
+OAKEY2,QLD1,gas,Oakey,ERM
+BRAEMAR1,QLD1,gas,Braemar,ArcLight
+BRAEMAR2,QLD1,gas,Braemar,ArcLight
+BRAEMAR3,QLD1,gas,Braemar,ArcLight
+BRAEMAR5,QLD1,gas,Braemar 2,Origin
+BRAEMAR6,QLD1,gas,Braemar 2,Origin
+BRAEMAR7,QLD1,gas,Braemar 2,Origin
+DDPS1,QLD1,gas,Darling Downs,Origin
+MSTUART1,QLD1,gas,Mount Stuart,Origin
+MSTUART2,QLD1,gas,Mount Stuart,Origin
+MSTUART3,QLD1,gas,Mount Stuart,Origin
+ROMA_7,QLD1,gas,Roma,Origin
+ROMA_8,QLD1,gas,Roma,Origin
+YABULU1,QLD1,gas,Yabulu,Townsville Gas
+YABULU2,QLD1,gas,Yabulu,Townsville Gas
+CONDAM01,QLD1,gas,Condamine,QGC
 DAANDINE,QLD1,gas,Daandine,APA Group
+KAREEYA1,QLD1,hydro,Kareeya,Stanwell
+KAREEYA2,QLD1,hydro,Kareeya,Stanwell
+KAREEYA3,QLD1,hydro,Kareeya,Stanwell
+KAREEYA4,QLD1,hydro,Kareeya,Stanwell
+BARRON-1,QLD1,hydro,Barron Gorge,Stanwell
+BARRON-2,QLD1,hydro,Barron Gorge,Stanwell
+WIVENHOE1,QLD1,hydro,Wivenhoe,CS Energy
+WIVENHOE2,QLD1,hydro,Wivenhoe,CS Energy
+KOOMBHYD,QLD1,hydro,Koombooloomba,Stanwell
 COOPGWF1,QLD1,wind,Coopers Gap Wind Farm,AGL
+KENNGWF1,QLD1,wind,Kennedy Energy Park,Windlab
+MAREEWF1,QLD1,wind,Mt Emerald,Ratch
+MOUNT_MILLAR,QLD1,wind,Mount Millar,Tilt
+WAREEWF1,QLD1,wind,Warwick,Goldwind
 KIDSTSF1,QLD1,solar,Kidston Solar Farm,Genex
 WANDOAN1,QLD1,solar,Wandoan South Solar Farm,Wirsol
+BLUFFSF1,QLD1,solar,Bluff Solar Farm,X-Elio
+BOUSF1,QLD1,solar,Bouldercombe Solar Farm,Genex
+CHILDSF1,QLD1,solar,Childers Solar Farm,Impact
+CLARESF1,QLD1,solar,Clare Solar Farm,Fotowatio
+COLUSF1,QLD1,solar,Columboola Solar Farm,Engie
+DAGHGSF1,QLD1,solar,Daydream Solar Farm,Edify
+DARLISF1,QLD1,solar,Darling Downs Solar Farm,APA
+EDLEEN,QLD1,solar,Edenvale Solar,Genex
+EMSF1,QLD1,solar,Emerald Solar Park,Esco Pacific
+EVERSF1,QLD1,solar,Yarranlea Solar,Risen
+HAMISF1,QLD1,solar,Hamilton Solar Farm,Spark Solar
+HUGHSF1,QLD1,solar,Hughenden Solar,Stanwell
+KENNDSF1,QLD1,solar,Kennedy Solar,Windlab
+KIDSTLSF,QLD1,solar,Kidston Pumped Hydro,Genex
+LILYSF1,QLD1,solar,Lilyvale Solar,FRV
+LRSF1,QLD1,solar,Longreach Solar,Canadian Solar
+OAKEY1SF,QLD1,solar,Oakey 1 Solar,Canadian Solar
+OAKEYSF,QLD1,solar,Oakey 2 Solar,Canadian Solar
+RUGBYSF1,QLD1,solar,Rugby Run Solar Farm,Adani
+RUGBYSF2,QLD1,solar,Rugby Run Solar Farm,Adani
+SUSF1,QLD1,solar,Susan River Solar,Foresight
+TBSF1,QLD1,solar,Tailem Bend,Vena
+VALDORA,QLD1,solar,Valdora,Sunshine Coast Council
+WARWICKSF,QLD1,solar,Warwick Solar Farm,UQ
+WESTPRSF,QLD1,solar,Western Downs Solar,Neoen
+WPSF1,QLD1,solar,Whitsunday Solar Farm,Edify
+YARRABEE,QLD1,solar,Yarranlea Solar,Risen
+BOULSGB1,QLD1,battery,Bouldercombe BESS,Genex
+GREENGB1,QLD1,battery,Greenbank BESS,Quinbrook
+LILYBES,QLD1,battery,Lilyvale BESS,FRV
+WANDBG1,QLD1,battery,Wandoan BESS,Vena
+# ============================ VIC1 (Victoria) ============================
 LY_W1,VIC1,brown_coal,Loy Yang A,AGL
 LY_W2,VIC1,brown_coal,Loy Yang A,AGL
 LY_W3,VIC1,brown_coal,Loy Yang A,AGL
@@ -67,16 +189,74 @@ JLA01,VIC1,gas,Jeeralang A,EnergyAustralia
 JLA02,VIC1,gas,Jeeralang A,EnergyAustralia
 JLA03,VIC1,gas,Jeeralang A,EnergyAustralia
 JLA04,VIC1,gas,Jeeralang A,EnergyAustralia
+JLB01,VIC1,gas,Jeeralang B,EnergyAustralia
+JLB02,VIC1,gas,Jeeralang B,EnergyAustralia
+JLB03,VIC1,gas,Jeeralang B,EnergyAustralia
 LNGS1,VIC1,gas,Laverton North,Snowy Hydro
 LNGS2,VIC1,gas,Laverton North,Snowy Hydro
 NPS1,VIC1,gas,Newport,EnergyAustralia
+BARRYGAS,VIC1,gas,Barrymead,Snowy
+MORTLK11,VIC1,gas,Mortlake,Origin
+MORTLK12,VIC1,gas,Mortlake,Origin
+VPGS1,VIC1,gas,Valley Power,Snowy
+VPGS2,VIC1,gas,Valley Power,Snowy
+VPGS3,VIC1,gas,Valley Power,Snowy
+VPGS4,VIC1,gas,Valley Power,Snowy
+VPGS5,VIC1,gas,Valley Power,Snowy
+VPGS6,VIC1,gas,Valley Power,Snowy
 MURRAY,VIC1,hydro,Murray,Snowy Hydro
+HUMEV,VIC1,hydro,Hume VIC,Snowy
+DARTMOUTH,VIC1,hydro,Dartmouth,AGL
+EILDON1,VIC1,hydro,Eildon,AGL
+EILDON2,VIC1,hydro,Eildon,AGL
+EILDON3,VIC1,hydro,Eildon,AGL
+MCKAY1,VIC1,hydro,McKay,Snowy
+WUMBULGAL,VIC1,hydro,Wonthaggi,Snowy
 WAUBRAWF,VIC1,wind,Waubra Wind Farm,Acciona
 MACARTH1,VIC1,wind,Macarthur Wind Farm,AGL
 ARWF1,VIC1,wind,Ararat Wind Farm,Renewable Energy Systems
 BULGANA1,VIC1,wind,Bulgana Green Power Hub,Neoen
+BERRYBNK,VIC1,wind,Berrybank Wind Farm,Global Power Generation
+CHALWF1,VIC1,wind,Challicum Hills,Pacific Hydro
+CHEPWF1,VIC1,wind,Cherry Tree,Infigen
+CROOKWF2,VIC1,wind,Crookwell 2,Goldwind
+DUNDONWF,VIC1,wind,Dundonnell Wind Farm,Tilt
+ELAINWF1,VIC1,wind,Elaine Wind Farm,WestWind
+GLENMORWF,VIC1,wind,Glenrowan,Tilt
+KIATAWF1,VIC1,wind,Kiata,Pacific Hydro
+LALCKWF1,VIC1,wind,Lal Lal,Macquarie
+MOORABWF,VIC1,wind,Moorabool,Goldwind
+MOUNTGEL,VIC1,wind,Mt Gellibrand,Acciona
+MTMERCER,VIC1,wind,Mt Mercer,Acciona
+MUSSELWF,VIC1,wind,Musselroe,Hydro Tas
+OAKLAND1,VIC1,wind,Oaklands Hill,Acciona
+RYAN1,VIC1,wind,Ryan Corner,Pacific Hydro
+SALTCREEK,VIC1,wind,Salt Creek,Tilt
+STKDSWF1,VIC1,wind,Stockyard Hill,Goldwind
+TINGAWF1,VIC1,wind,Tingapa,UAC
+WAUBRAWF1,VIC1,wind,Waubra,Acciona
+WGWF1,VIC1,wind,Mt Gellibrand,Acciona
+YAMBUKWF,VIC1,wind,Yambuk,Pacific Hydro
+YAW1,VIC1,wind,Yawong,Hydro Tas
+BANNGSF1,VIC1,solar,Bannerton,Hydro Tas
+BNGSF1V,VIC1,solar,Bannerton Solar Park,Hydro Tas
+BANNS1,VIC1,solar,Bannerton Solar Park,Hydro Tas
+CHALSF1,VIC1,solar,Challoner Solar Farm,Edify
+GLENMSF1,VIC1,solar,Glenmaggie Solar,Edify
+HORSESH,VIC1,solar,Horseshoe Lagoon,FRV
+KIAMAL1,VIC1,solar,Kiamal Solar Farm,Total Eren
+NUMURSF1,VIC1,solar,Numurkah Solar Farm,Neoen
+SWANSF1,VIC1,solar,Swan Hill,X-Elio
+WEMENSF,VIC1,solar,Wemen Solar Farm,Wirsol
+YATSF1,VIC1,solar,Yatpool Solar Farm,Wirsol
+YENDON1,VIC1,solar,Yendon Solar,Total Eren
+BULGANA2,VIC1,solar,Bulgana Solar,Neoen
 BALBL1,VIC1,battery,Ballarat Energy Storage,Energy Australia
 VBBL1,VIC1,battery,Victorian Big Battery,Neoen
+GANGB1,VIC1,battery,Gannawarra BESS,Edify
+HPRG1V,VIC1,battery,Hazelwood BESS,Engie
+RANGB1,VIC1,battery,Rangebank BESS,Eku
+# ============================ SA1 (South Australia) ============================
 TORRA1,SA1,gas,Torrens Island A,AGL
 TORRA2,SA1,gas,Torrens Island A,AGL
 TORRA3,SA1,gas,Torrens Island A,AGL
@@ -95,17 +275,52 @@ QPS2,SA1,gas,Quarantine,Origin Energy
 QPS3,SA1,gas,Quarantine,Origin Energy
 QPS4,SA1,gas,Quarantine,Origin Energy
 QPS5,SA1,gas,Quarantine,Origin Energy
+LADBROK1,SA1,gas,Ladbroke Grove,Origin
+LADBROK2,SA1,gas,Ladbroke Grove,Origin
+MINTARO,SA1,gas,Mintaro,Origin
+PORTLINK,SA1,gas,Port Lincoln,Solar Choice
+SNUGSF1,SA1,gas,Snuggery,Synergen
+ANGAS1,SA1,gas,Angaston,Infigen
+ANGAS2,SA1,gas,Angaston,Infigen
+BARCSF1,SA1,gas,Barker Inlet,AGL
+BARCSF2,SA1,gas,Barker Inlet,AGL
+PTSTAN1,SA1,gas,Port Stanvac,EnergyAustralia
+HALLETT,SA1,gas,Hallett,AGL
+HALLETT2,SA1,gas,Hallett 2,AGL
 LKBONNY1,SA1,wind,Lake Bonney Stage 1,Infigen
 LKBONNY2,SA1,wind,Lake Bonney Stage 2,Infigen
 LKBONNY3,SA1,wind,Lake Bonney Stage 3,Infigen
 HALLWF1,SA1,wind,Hallett Wind Farm,AGL
 HALLWF2,SA1,wind,Hallett 2 Wind Farm,AGL
+HALLWF3,SA1,wind,Hallett Hill,AGL
 SNOWNTH1,SA1,wind,Snowtown Stage 1,Trustpower
 SNOWSTH1,SA1,wind,Snowtown Stage 2,Trustpower
+NBHWF1,SA1,wind,North Brown Hill,AGL
+WPWF,SA1,wind,Wattle Point Wind Farm,AGL
+CATHRWF1,SA1,wind,Cathedral Rocks,Acciona
+CLEMSWF1,SA1,wind,Clements Gap,Pacific Hydro
+CLEMSWF2,SA1,wind,Clements Gap 2,Pacific Hydro
+LINCSF1,SA1,wind,Lincoln Gap,Nexif
+WATERSWF,SA1,wind,Waterloo,EnergyAustralia
+WILLWF1,SA1,wind,Willogoleche,Engie
 BUNGALAS,SA1,solar,Bungala 1,Enel Green Power
 TB2SF1,SA1,solar,Tailem Bend Solar,Vena Energy
+BUGSF1,SA1,solar,Bungala 2,Enel
+RENMARK,SA1,solar,Renmark Solar,Sun Brilliance
+COLEAMS2,SA1,solar,Coleambally Solar,Neoen
+NORTHAS1,SA1,solar,Port Augusta Solar,Photon
+WHITESF1,SA1,solar,Whitsunday,Edify
 HPRG1,SA1,battery,Hornsdale Power Reserve,Neoen
 HPRL1,SA1,battery,Hornsdale Power Reserve,Neoen
+DALR1,SA1,battery,Dalrymple ESS,AGL
+ESCRBOS,SA1,battery,Escher BESS,Akaysha
+LWPL1,SA1,battery,Lake Bonney BESS,Infigen
+TBESS1,SA1,battery,Torrens Island BESS,AGL
+TBPS1,SA1,battery,Tailem Bend BESS,Vena
+TBSL1,SA1,battery,Tailem Bend BESS Load,Vena
+WBBESG1,SA1,battery,Whyalla BESS,Neoen
+WBBESL1,SA1,battery,Whyalla BESS Load,Neoen
+# ============================ TAS1 (Tasmania) ============================
 BBTHREE1,TAS1,gas,Bell Bay Three,Hydro Tasmania
 BBTHREE2,TAS1,gas,Bell Bay Three,Hydro Tasmania
 BBTHREE3,TAS1,gas,Bell Bay Three,Hydro Tasmania
@@ -122,8 +337,21 @@ REECE2,TAS1,hydro,Reece,Hydro Tasmania
 TARRALEAH,TAS1,hydro,Tarraleah,Hydro Tasmania
 TREVALLN,TAS1,hydro,Trevallyn,Hydro Tasmania
 TUNGATIN,TAS1,hydro,Tungatinah,Hydro Tasmania
+CETHANA,TAS1,hydro,Cethana,Hydro Tasmania
+CLUNY,TAS1,hydro,Cluny,Hydro Tasmania
+DEVILSGT,TAS1,hydro,Devils Gate,Hydro Tasmania
+FISHER,TAS1,hydro,Fisher,Hydro Tasmania
+LEM3,TAS1,hydro,Lemonthyme,Hydro Tasmania
+LK_ECHO,TAS1,hydro,Lake Echo,Hydro Tasmania
+MEADOWBK,TAS1,hydro,Meadowbank,Hydro Tasmania
+PALOONA,TAS1,hydro,Paloona,Hydro Tasmania
+REPULSE,TAS1,hydro,Repulse,Hydro Tasmania
+ROWALLAN,TAS1,hydro,Rowallan,Hydro Tasmania
+TODDS,TAS1,hydro,Todds Corner,Hydro Tasmania
+TRIBUTE,TAS1,hydro,Tribute,Hydro Tasmania
+WAYATIN,TAS1,hydro,Wayatinah,Hydro Tasmania
 MUSSELRO,TAS1,wind,Musselroe Wind Farm,Hydro Tasmania
 WOOLNTH1,TAS1,wind,Woolnorth Bluff Point,Woolnorth Wind Holdings
 WOOLNTH2,TAS1,wind,Woolnorth Studland Bay,Woolnorth Wind Holdings
 GRANWF1,TAS1,wind,Granville Harbour,Palisade
-CATHRWF1,TAS1,wind,Cattle Hill Wind Farm,Goldwind
+CATHRWF2,TAS1,wind,Cattle Hill Wind Farm,Goldwind

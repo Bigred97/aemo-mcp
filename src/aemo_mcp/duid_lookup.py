@@ -33,21 +33,28 @@ def _data_path() -> Path:
 
 
 def _load() -> dict[str, dict[str, str]]:
-    """Load duid_snapshot.csv → {duid: {region, fuel, station, ...}}."""
+    """Load duid_snapshot.csv → {duid: {region, fuel, station, ...}}.
+
+    Lines starting with `#` are treated as comments. Empty DUID rows are
+    skipped. Anything else parses as a DUID → (region, fuel, station, owner).
+    """
     out: dict[str, dict[str, str]] = {}
     path = _data_path()
     with path.open("r", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            duid = (row.get("DUID") or "").strip().upper()
-            if not duid:
-                continue
-            out[duid] = {
-                "region": (row.get("REGION") or "").strip().upper(),
-                "fuel": (row.get("FUEL") or "").strip().lower(),
-                "station": (row.get("STATION") or "").strip(),
-                "owner": (row.get("OWNER") or "").strip(),
-            }
+        # Filter out comment lines BEFORE csv.DictReader sees them, so the
+        # parser doesn't accidentally treat them as data rows.
+        lines = [ln for ln in f if ln and not ln.lstrip().startswith("#")]
+    reader = csv.DictReader(lines)
+    for row in reader:
+        duid = (row.get("DUID") or "").strip().upper()
+        if not duid or duid.startswith("#"):
+            continue
+        out[duid] = {
+            "region": (row.get("REGION") or "").strip().upper(),
+            "fuel": (row.get("FUEL") or "").strip().lower(),
+            "station": (row.get("STATION") or "").strip(),
+            "owner": (row.get("OWNER") or "").strip(),
+        }
     return out
 
 

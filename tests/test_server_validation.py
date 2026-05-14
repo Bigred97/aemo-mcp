@@ -121,13 +121,20 @@ async def test_get_data_non_dict_filters():
 
 
 async def test_get_data_int_period_coerced_to_string():
-    """An int year (2024) should not raise at validation."""
-    # This will fail at fetch because no mocks, but it must not fail at
-    # validation. We catch any non-validation ValueError and let the test pass.
-    with pytest.raises(ValueError):
-        await server.get_data(
-            "dispatch_price", filters={"region": "NSW1"}, start_period=2026  # type: ignore[arg-type]
-        )
+    """An int year must be coerced to a string at the validation boundary.
+
+    Verify by checking the validator directly — we don't want to hit the
+    network just to test type coercion.
+    """
+    out = server._validate_period(2026, "start_period")
+    assert out == "2026"
+
+
+async def test_get_data_int_period_zero_returns_none_safely():
+    # Currently treated as a year-zero attempt — coerce to "0" then reject
+    # on regex (too few digits).
+    with pytest.raises(ValueError, match="invalid format"):
+        server._validate_period(0, "start_period")
 
 
 async def test_get_data_bool_period_rejected():

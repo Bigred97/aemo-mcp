@@ -52,8 +52,13 @@ CREATE INDEX IF NOT EXISTS idx_kind_cached_at ON http_cache(kind, cached_at);
 
 
 class Cache:
-    def __init__(self, db_path: Path = DEFAULT_DB_PATH) -> None:
-        self.db_path = db_path
+    def __init__(self, db_path: Path | None = None) -> None:
+        # Resolve DEFAULT_DB_PATH at construction time (not class-def time)
+        # so tests that monkeypatch the module-level constant take effect.
+        # Default Path() args are evaluated once at class definition, which
+        # is too early to be overridden — leaked across tests previously.
+        import aemo_mcp.cache as _self_mod
+        self.db_path = db_path or _self_mod.DEFAULT_DB_PATH
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._initialized = False
         self._init_lock = asyncio.Lock()

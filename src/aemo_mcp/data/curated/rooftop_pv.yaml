@@ -16,7 +16,9 @@ source_url: http://nemweb.com.au/Reports/Current/ROOFTOP_PV/
 
 folders:
   - path: /Reports/Current/ROOFTOP_PV/ACTUAL/
-    filename_regex: "PUBLIC_ROOFTOP_PV_ACTUAL_(MEASUREMENT_)?\\d{14}_\\d+\\.zip"
+    # AEMO uses "SATELLITE" or "MEASUREMENT" depending on the source.
+    # Match either (or none) infix to be forward-compatible.
+    filename_regex: "PUBLIC_ROOFTOP_PV_ACTUAL_(SATELLITE_|MEASUREMENT_)?\\d{14}_\\d+\\.zip"
     discriminator: actual
     sections:
       - name: ROOFTOP.ACTUAL

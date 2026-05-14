@@ -2,16 +2,16 @@ id: predispatch_30min
 name: NEM Predispatch — 30-minute (~40h horizon)
 description: |
   Regional 30-minute predispatch forecast — AEMO's half-hourly look-ahead
-  out to ~40 hours from gate closure. Source: PREDISPATCHIS / PREDISPATCH.REGIONSUM.
+  out to ~40 hours from gate closure. Source: PREDISPATCHIS /
+  PREDISPATCH.REGION_SOLUTION (demand) + PREDISPATCH.REGION_PRICES (RRP).
 
   Use this for forward price/demand curves: "what does AEMO expect demand
   to be tomorrow morning?", "what's the forecast price curve for the next
-  24 hours?". The forecast is updated every 30 minutes.
+  24 hours?". The forecast is updated every 30 minutes; one full run yields
+  ~45 half-hourly periods × 5 regions = 225 rows per section.
 
-  v0 exposes the region-summary section only (demand + dispatchable + price
-  in one row per region per future 30-min period). Predispatch price and
-  interconnector forecasts are available in the same ZIP and will be added
-  in a future release.
+  Each row's `period` field is the forecast target time (DATETIME column,
+  not PERIODID — DATETIME is the actual market time the forecast applies to).
 cadence: 30 min
 cache_kind: forecast
 settlement_column: DATETIME
@@ -21,9 +21,12 @@ folders:
   - path: /Reports/Current/PredispatchIS_Reports/
     filename_regex: "PUBLIC_PREDISPATCHIS_\\d{12}_\\d{14}\\.zip"
     sections:
-      - name: PREDISPATCH.REGIONSUM
+      # AEMO publishes price and solution as separate sections in the same
+      # ZIP. REGION_SOLUTION carries demand/generation; REGION_PRICES carries
+      # RRP. We extract both and the metric the user asked for is picked
+      # by source_column match.
+      - name: PREDISPATCH.REGION_SOLUTION
       - name: PREDISPATCH.REGION_PRICES
-        discriminator: prices
 
 filters:
   - key: region
