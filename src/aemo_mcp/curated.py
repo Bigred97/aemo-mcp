@@ -12,7 +12,7 @@ Loaded once at import time and stored in a frozen dataclass registry.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
 from typing import Any

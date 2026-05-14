@@ -1,7 +1,6 @@
 """FastMCP tool registration tests — verifies the MCP surface is wired correctly."""
 from __future__ import annotations
 
-import pytest
 
 
 def test_server_module_imports():

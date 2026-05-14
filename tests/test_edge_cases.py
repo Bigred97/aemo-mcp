@@ -207,7 +207,6 @@ def test_parser_recovers_from_truncated_csv():
 @respx.mock
 async def test_concurrent_latest_calls_dedup_to_one_http(tmp_path):
     """50 concurrent latest() calls must dedupe to 1 listing + 1 zip fetch."""
-    import re as _re
     from aemo_mcp.client import AEMOClient
     from aemo_mcp.cache import Cache
     from aemo_mcp.fetch import fetch_dataset

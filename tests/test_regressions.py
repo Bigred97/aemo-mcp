@@ -6,11 +6,8 @@ a production behaviour.
 """
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
-import httpx
-import pytest
 import respx
 
 from aemo_mcp import curated

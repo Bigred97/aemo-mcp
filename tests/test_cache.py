@@ -5,7 +5,6 @@ import time
 from datetime import timedelta
 from pathlib import Path
 
-import pytest
 
 from aemo_mcp.cache import TTL, Cache
 

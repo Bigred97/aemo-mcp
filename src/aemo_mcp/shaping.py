@@ -17,7 +17,7 @@ import io
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from .curated import CuratedDataset, CuratedMetric
+from .curated import CuratedDataset
 from .models import DataResponse, Observation
 
 # AEMO market time = UTC+10 (no DST — NEM is brisbane-aligned year-round).

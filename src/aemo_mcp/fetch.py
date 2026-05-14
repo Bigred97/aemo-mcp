@@ -23,7 +23,6 @@ from typing import Any
 from .client import AEMOAPIError, AEMOClient
 from .curated import (
     CuratedDataset,
-    CuratedFilter,
     CuratedFolder,
     compile_filename_regex,
 )
@@ -285,7 +284,7 @@ async def fetch_dataset(
             for csv_bytes in csv_blobs:
                 try:
                     sections = parse_csv(csv_bytes)
-                except AEMOParseError as e:
+                except AEMOParseError:
                     # In a daily archive with 288 inner zips, one corrupt
                     # entry shouldn't kill the whole response. Skip it.
                     continue
@@ -538,7 +537,7 @@ async def _fetch_archive_zips(
         url = client.build_url(archive_path, filename)
         try:
             body = await client.fetch_zip(url, kind="archive")
-        except AEMOAPIError as e:
+        except AEMOAPIError:
             # One missing day shouldn't fail the whole window.
             continue
         out.append((url, body))
