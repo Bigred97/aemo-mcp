@@ -192,3 +192,80 @@ async def test_dataset_id_lowercase_normalized():
 async def test_dataset_id_whitespace_trimmed():
     detail = await server.describe_dataset("  dispatch_price  ")
     assert detail.id == "dispatch_price"
+
+
+# ─── Error-message suggestions (CLAUDE.md quality dim #5) ─────────────────
+#
+# Every ValueError must say what to DO next, not just what went wrong.
+# These tests lock in the difflib-powered "Did you mean X?" hints + the
+# "Try search_datasets()" / "Try describe_dataset()" pointers that mirror
+# the rest of the portfolio after the 0.1.2 sweep.
+
+
+async def test_unknown_dataset_suggests_close_match():
+    """Misspelled dataset IDs should get a 'Did you mean X?' hint."""
+    with pytest.raises(ValueError) as exc_info:
+        await server.describe_dataset("dispach_price")  # typo
+    msg = str(exc_info.value)
+    assert "Did you mean" in msg, (
+        f"unknown dataset error should suggest the close match: {msg}"
+    )
+    assert "dispatch_price" in msg
+    # Also surfaces the canonical list and 'Try' pointer
+    assert "Try search_datasets" in msg or "list_curated" in msg
+
+
+async def test_unknown_dataset_lists_all_ids_when_no_close_match():
+    """When the typo is too far from any valid ID, we still list all 7 so
+    the agent can pick by eye."""
+    with pytest.raises(ValueError) as exc_info:
+        await server.describe_dataset("xyz_nonsense")
+    msg = str(exc_info.value)
+    assert "All 7 IDs" in msg or "list_curated" in msg, (
+        f"error should still point to the canonical list: {msg}"
+    )
+
+
+async def test_unknown_filter_key_suggests_close_match():
+    """Misspelled filter keys should get a 'Did you mean X?' hint."""
+    with pytest.raises(ValueError) as exc_info:
+        await server.get_data(
+            "dispatch_price", filters={"regiom": "NSW1"}  # typo of "region"
+        )
+    msg = str(exc_info.value)
+    assert "Did you mean 'region'" in msg, (
+        f"filter-key error should suggest 'region': {msg}"
+    )
+    assert "describe_dataset" in msg
+
+
+async def test_unknown_format_suggests_close_match():
+    """Misspelled format values should get a 'Did you mean X?' hint."""
+    with pytest.raises(ValueError) as exc_info:
+        await server.get_data(
+            "dispatch_price", filters={"region": "NSW1"}, format="recrods"  # type: ignore[arg-type]
+        )
+    msg = str(exc_info.value)
+    assert "Did you mean 'records'" in msg, (
+        f"format error should suggest 'records': {msg}"
+    )
+    assert "Valid options" in msg
+
+
+async def test_period_error_includes_worked_example():
+    """Period errors should show a concrete example the user can copy."""
+    with pytest.raises(ValueError) as exc_info:
+        await server.get_data(
+            "dispatch_price",
+            filters={"region": "NSW1"},
+            start_period="not a date",
+        )
+    msg = str(exc_info.value)
+    assert "Example" in msg or "example" in msg, (
+        f"period error should include a worked example: {msg}"
+    )
+    # Worked example must contain a real period like '2026-05-14' so the
+    # agent can copy-paste rather than re-derive the grammar.
+    assert any(s in msg for s in ("2026-05-14", "YYYY-MM-DD")), (
+        f"period error should show a date format: {msg}"
+    )

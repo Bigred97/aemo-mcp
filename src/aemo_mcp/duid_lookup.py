@@ -117,7 +117,12 @@ def aggregate_by(
     """
     dim = dimension.strip().lower()
     if dim not in ("region", "fuel"):
-        raise ValueError(f"Unsupported aggregation dimension {dimension!r}")
+        raise ValueError(
+            f"Unsupported aggregation dimension {dimension!r}. "
+            f"Valid options: ['region', 'fuel']. "
+            f"Try aggregate_by(rows, 'region') for NSW1/QLD1/SA1/TAS1/VIC1 "
+            f"grouping, or 'fuel' for black_coal/gas/wind/solar/battery/..."
+        )
     out: dict[str, list[str]] = {}
     for row in rows:
         duid = (row.get("DUID") or "").strip().upper()

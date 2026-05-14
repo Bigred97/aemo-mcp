@@ -76,9 +76,18 @@ class DataResponse(BaseModel):
     attribution: str = _AEMO_ATTRIBUTION
     source_url: str
     retrieved_at: datetime
-    # True if the most recent observation is older than 2x the feed cadence —
-    # signal to the LLM that NEMWEB is delayed or the feed has stopped.
+    # True if EITHER the most recent observation is older than 2x the feed
+    # cadence (NEM-side delay or the feed has stopped) OR a cached-fallback
+    # was served because NEMWEB returned a non-2xx (graceful degradation per
+    # CLAUDE.md quality dim #4). `stale_reason` disambiguates.
     stale: bool = False
+    # Human-readable explanation when `stale=True`, e.g.
+    # "AEMO/OpenNEM fetch returned 503 for ...; serving cached payload from
+    # ~12 minute(s) ago".
+    stale_reason: str | None = None
+    # Set when `latest()` (or similar) truncated a large response to a limit.
+    # Original row count goes here so agents can detect + surface the cap.
+    truncated_at: int | None = None
     server_version: str = Field(default_factory=lambda: _get_server_version())
 
 

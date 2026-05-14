@@ -120,8 +120,9 @@ def _parse_period(s: str | None) -> datetime | None:
         except ValueError:
             continue
     raise FetchError(
-        f"Could not parse period {s!r}. Use 'YYYY', 'YYYY-MM', 'YYYY-MM-DD', "
-        "or 'YYYY-MM-DD HH:MM'."
+        f"Could not parse period {s!r}. Use 'YYYY' (annual), 'YYYY-MM' "
+        "(monthly), 'YYYY-MM-DD' (daily), or 'YYYY-MM-DD HH:MM' (5-min). "
+        "Example: '2026-05-14' or '2026-05-14 09:00'."
     )
 
 

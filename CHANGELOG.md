@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.1.2 (2026-05-15)
+
+Portfolio parity — stale-cache fallback + error-message sweep + dependabot +
+CLAUDE.md. 297 unit tests (was 288) + 10 live tests, 3× zero-flake green.
+
+- **Add: stale-cache fallback (graceful degradation).** When NEMWEB returns
+  5xx or is unreachable (`httpx.RequestError`), `AEMOClient._fetch_cached`
+  now falls back to the most-recent cached payload (regardless of TTL) via
+  the new `Cache.get_stale()` and records the staleness on a `_stale_signal`
+  ContextVar. Server-side tool wrappers (`get_data`, `latest`) read the
+  signal after the fetch chain and surface it on the response via
+  `DataResponse.stale=True, stale_reason="AEMO/OpenNEM fetch returned X
+  for Y; serving cached payload from ~N minute(s) ago"`. Mirrors abs-mcp
+  0.2.13 / rba-mcp 0.1.10 patterns. Empty-cache fallback preserves the
+  original `AEMOAPIError` behaviour.
+- **Add: `DataResponse.stale_reason` and `truncated_at` fields.** Aligns the
+  envelope with the rest of the portfolio (abs / rba / ato / apra / aihw /
+  asic). `stale` retains its dual meaning: True when the latest NEM
+  observation is older than 2x cadence OR a cached fallback was served.
+- **Error-message sweep.** Every weak `ValueError` rewritten to suggest the
+  correction via stdlib `difflib.get_close_matches`. Unknown dataset IDs
+  now emit `Did you mean 'dispatch_price'?` for close typos; unknown filter
+  keys emit `Did you mean 'region'?`; unknown formats emit `Did you mean
+  'records'?`. Period errors now show a worked example
+  (`'2026-05-14' or '2026-05-14 09:00'`). `Unsupported aggregation
+  dimension` in duid_lookup now lists valid options. No new top-level
+  dependencies.
+- **Add: `CLAUDE.md`.** Repo-specific conventions auto-loaded by Claude
+  Code, mirroring the rest of the portfolio. Calls out the AEMO-specific
+  module set (`fetch.py`, `feeds.py`, `parsing.py`, `duid_lookup.py`),
+  the dual-meaning `stale` flag, the 5-min cadence cache-TTL ladder, and
+  the `/Reports/Current/` vs `/Reports/Archive/` pivot.
+- **Add: `.github/dependabot.yml`.** Weekly minor + patch update PRs for
+  pip + GitHub Actions, grouped, Mon 10:00 Sydney. Verbatim from the
+  sister repos.
+- **Tests: +4 stale-fallback regressions + 5 error-message-suggestion
+  regressions.** New tests cover: 5xx + stale cache → fallback + signal;
+  ConnectError + stale cache → same; 5xx + empty cache → still raises
+  `AEMOAPIError`; `Cache.get_stale()` round-trip + TTL bypass; "Did you
+  mean" hint for dataset / filter-key / format typos; period worked
+  example.
+
 ## 0.1.1 (2026-05-15)
 
 Customer-simulation hardening pass. Hammered every dataset against the live

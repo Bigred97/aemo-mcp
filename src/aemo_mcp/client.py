@@ -20,11 +20,45 @@ from __future__ import annotations
 
 import asyncio
 import re
+import time
+from contextvars import ContextVar
 from typing import Any
 
 import httpx
 
 from .cache import TTL, Cache, CacheKind
+
+
+# ─── stale signal (graceful-degradation reporting per CLAUDE.md dim #4) ─
+# When NEMWEB is unreachable, _fetch_cached falls back to the cached payload
+# regardless of TTL and records the staleness in this ContextVar. Server-side
+# tool wrappers read it after the request chain and set
+# DataResponse.stale / .stale_reason. ContextVar (not instance attr) so
+# concurrent MCP tool calls each see their own state.
+_stale_signal: ContextVar[tuple[bool, str | None]] = ContextVar(
+    "aemo_mcp_stale_signal", default=(False, None)
+)
+
+
+def reset_stale_signal() -> None:
+    """Clear the stale state. Call once at the start of each tool call."""
+    _stale_signal.set((False, None))
+
+
+def get_stale_signal() -> tuple[bool, str | None]:
+    """Return (stale, reason) for the most recent fetch chain in this context."""
+    return _stale_signal.get()
+
+
+def _mark_stale(reason: str) -> None:
+    """Record that a stale-cache fallback was served this context.
+
+    If multiple fetches in one chain are stale, we keep the FIRST reason
+    (it's usually the most informative — the originating upstream failure).
+    """
+    cur_stale, _ = _stale_signal.get()
+    if not cur_stale:
+        _stale_signal.set((True, reason))
 
 DEFAULT_BASE_URL = "http://nemweb.com.au"
 DEFAULT_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
@@ -95,11 +129,37 @@ class AEMOClient:
             try:
                 resp = await self._http.get(url)
                 resp.raise_for_status()
-            except httpx.HTTPStatusError as e:
-                raise AEMOAPIError(
-                    f"NEMWEB returned {e.response.status_code} for {url}"
-                ) from e
-            except httpx.RequestError as e:
+            except (httpx.HTTPStatusError, httpx.RequestError) as e:
+                # Graceful degradation: when NEMWEB is unreachable, fall back
+                # to the most-recent cached payload (regardless of TTL) rather
+                # than raising and breaking the agent's chain of reasoning.
+                # The staleness is surfaced via the _stale_signal ContextVar
+                # and ends up in DataResponse.stale / stale_reason.
+                fallback = await self.cache.get_stale(url)
+                if fallback is not None:
+                    payload, cached_at = fallback
+                    age_min = max(0, int((time.time() - cached_at) / 60))
+                    if isinstance(e, httpx.HTTPStatusError):
+                        upstream = (
+                            f"AEMO/OpenNEM fetch returned "
+                            f"{e.response.status_code}"
+                        )
+                    else:
+                        upstream = (
+                            f"AEMO/OpenNEM fetch unreachable "
+                            f"({type(e).__name__})"
+                        )
+                    _mark_stale(
+                        f"{upstream} for {url}; serving cached payload from "
+                        f"~{age_min} minute(s) ago"
+                    )
+                    future.set_result(payload)
+                    return payload
+                # Genuinely no cache to fall back to — preserve original behaviour
+                if isinstance(e, httpx.HTTPStatusError):
+                    raise AEMOAPIError(
+                        f"NEMWEB returned {e.response.status_code} for {url}"
+                    ) from e
                 raise AEMOAPIError(f"NEMWEB request failed: {e}") from e
             await self.cache.set(url, resp.content, kind=kind)
             future.set_result(resp.content)

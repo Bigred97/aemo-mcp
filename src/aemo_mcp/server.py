@@ -11,6 +11,7 @@ helpful error messages with "Try X" hints.
 from __future__ import annotations
 
 import asyncio
+import difflib
 import re
 from typing import Annotated, Any, Literal
 
@@ -18,7 +19,12 @@ from fastmcp import FastMCP
 from pydantic import Field
 
 from . import curated, feeds
-from .client import AEMOAPIError, AEMOClient
+from .client import (
+    AEMOAPIError,
+    AEMOClient,
+    get_stale_signal,
+    reset_stale_signal,
+)
 from .fetch import FetchError, fetch_dataset
 from .models import DataResponse, DatasetDetail, DatasetSummary
 
@@ -32,6 +38,25 @@ mcp = FastMCP("aemo-mcp")
 
 _client: AEMOClient | None = None
 _client_lock = asyncio.Lock()
+
+
+def _suggest(needle: str, haystack: list[str], n: int = 1) -> str:
+    """Return a `Did you mean 'X'?` suffix, or "" when no close match.
+
+    Uses stdlib `difflib.get_close_matches` so we don't pull in rapidfuzz at
+    the validation layer (rapidfuzz is already a runtime dep but kept out of
+    error formatting paths to minimise import-time surface).
+    """
+    if not needle or not haystack:
+        return ""
+    matches = difflib.get_close_matches(
+        needle.lower(), [h.lower() for h in haystack], n=n, cutoff=0.5
+    )
+    if not matches:
+        return ""
+    # Map back to original casing
+    suggestion = next((h for h in haystack if h.lower() == matches[0]), matches[0])
+    return f"Did you mean {suggestion!r}? "
 
 
 async def _get_client() -> AEMOClient:
@@ -101,7 +126,8 @@ def _validate_period(value: Any, field_name: str) -> str | None:
         raise ValueError(
             f"{field_name} must be a string in 'YYYY', 'YYYY-MM', "
             f"'YYYY-MM-DD', or 'YYYY-MM-DD HH:MM' format, "
-            f"got {type(value).__name__}."
+            f"got {type(value).__name__}. "
+            f"Example: {field_name}='2026-05-14' or '2026-05-14 09:00'."
         )
     s = value.strip()
     if not s:
@@ -109,9 +135,47 @@ def _validate_period(value: Any, field_name: str) -> str | None:
     if not _PERIOD_PATTERN.match(s):
         raise ValueError(
             f"{field_name} {value!r} has invalid format. "
-            "Use 'YYYY', 'YYYY-MM', 'YYYY-MM-DD', or 'YYYY-MM-DD HH:MM'."
+            "Use 'YYYY' (annual), 'YYYY-MM' (monthly), 'YYYY-MM-DD' (daily), "
+            "or 'YYYY-MM-DD HH:MM' (5-min). "
+            f"Example: {field_name}='2026-05-14' or '2026-05-14 09:00'."
         )
     return s
+
+
+async def _fetch_with_stale_signal(
+    cd: curated.CuratedDataset,
+    filters: dict[str, Any] | None,
+    start_validated: str | None,
+    end_validated: str | None,
+    fmt: str,
+    only_latest: bool,
+) -> DataResponse:
+    """Run `fetch_dataset` under a reset stale-signal context and merge the
+    cached-fallback flag into the returned DataResponse.
+
+    Mirrors abs-mcp's `_get_data_impl` glue. The `stale` field on the response
+    has dual meaning here (NEM delay OR cached fallback) so we OR our signal
+    onto whatever shaping.build_response already set; `stale_reason` is set
+    only when the cached-fallback path fired (the delay branch leaves it None,
+    which agents can interpret as "delay" by looking at the latest interval
+    versus retrieved_at).
+    """
+    reset_stale_signal()
+    client = await _get_client()
+    resp = await fetch_dataset(
+        client,
+        cd,
+        filters,
+        start_validated,
+        end_validated,
+        fmt,
+        only_latest=only_latest,
+    )
+    stale, reason = get_stale_signal()
+    if stale:
+        resp.stale = True
+        resp.stale_reason = reason
+    return resp
 
 
 def _check_filter_keys(dataset_id: str, filters: dict[str, Any] | None) -> None:
@@ -120,13 +184,15 @@ def _check_filter_keys(dataset_id: str, filters: dict[str, Any] | None) -> None:
     cd = curated.get(dataset_id)
     if cd is None:
         return
-    known = {f.key for f in cd.filters}
+    known = sorted({f.key for f in cd.filters})
     unknown = [k for k in filters if k not in known]
     if unknown:
+        hint = _suggest(unknown[0], known)
         raise ValueError(
             f"Unknown filter key(s) {unknown} for dataset '{dataset_id}'. "
-            f"Valid keys: {sorted(known)}. "
-            f"Call describe_dataset('{dataset_id}') to see filter definitions."
+            f"{hint}"
+            f"Valid keys: {known}. "
+            f"Try describe_dataset('{dataset_id}') to see filter definitions."
         )
 
 
@@ -238,10 +304,13 @@ async def describe_dataset(
     norm = _normalize_dataset_id(dataset_id)
     cd = curated.get(norm)
     if cd is None:
+        ids = curated.list_ids()
+        hint = _suggest(norm, ids)
         raise ValueError(
             f"Dataset {dataset_id!r} is not a known AEMO dataset. "
-            f"Try search_datasets() to discover valid IDs. "
-            f"All 7 v0 IDs: {curated.list_ids()}"
+            f"{hint}"
+            f"Try search_datasets() to discover valid IDs, or list_curated() "
+            f"to enumerate. All 7 IDs: {ids}"
         )
     return cd.to_detail()
 
@@ -352,30 +421,38 @@ async def get_data(
     else:
         raise ValueError(
             f"format must be a string, got {type(format).__name__}. "
-            f"Valid options: {sorted(_VALID_FORMATS)}"
+            f"Valid options: {sorted(_VALID_FORMATS)}. "
+            f"Example: format='records' (default), 'series', or 'csv'."
         )
     if fmt_norm not in _VALID_FORMATS:
+        hint = _suggest(fmt_norm, sorted(_VALID_FORMATS))
         raise ValueError(
-            f"Unknown format {format!r}. Valid options: {sorted(_VALID_FORMATS)}"
+            f"Unknown format {format!r}. {hint}"
+            f"Valid options: {sorted(_VALID_FORMATS)}. "
+            f"Example: format='records' (default), 'series', or 'csv'."
         )
 
     if start_validated and end_validated and start_validated > end_validated:
         raise ValueError(
             f"end_period ({end_validated}) is before start_period "
-            f"({start_validated}). Try swapping them."
+            f"({start_validated}). Try swapping them. "
+            f"Period formats: 'YYYY', 'YYYY-MM', 'YYYY-MM-DD', "
+            f"or 'YYYY-MM-DD HH:MM'."
         )
 
     cd = curated.get(norm)
     if cd is None:
+        ids = curated.list_ids()
+        hint = _suggest(norm, ids)
         raise ValueError(
             f"Dataset {dataset_id!r} is not a known AEMO dataset. "
-            f"Try search_datasets() to discover valid IDs."
+            f"{hint}"
+            f"Try search_datasets() to discover valid IDs, or list_curated() "
+            f"to enumerate. All 7 IDs: {ids}"
         )
 
-    client = await _get_client()
     try:
-        return await fetch_dataset(
-            client,
+        return await _fetch_with_stale_signal(
             cd,
             filters_validated,
             start_validated,
@@ -386,7 +463,11 @@ async def get_data(
     except FetchError as e:
         raise ValueError(str(e)) from e
     except AEMOAPIError as e:
-        raise ValueError(f"NEMWEB request failed: {e}") from e
+        raise ValueError(
+            f"NEMWEB request failed: {e}. "
+            f"NEMWEB occasionally rolls files in/out of /Reports/Current/; "
+            f"try narrowing the period or retrying in 30s."
+        ) from e
 
 
 @mcp.tool
@@ -454,14 +535,16 @@ async def latest(
     _check_filter_keys(norm, filters_validated)
     cd = curated.get(norm)
     if cd is None:
+        ids = curated.list_ids()
+        hint = _suggest(norm, ids)
         raise ValueError(
             f"Dataset {dataset_id!r} is not a known AEMO dataset. "
-            f"Try search_datasets() to discover valid IDs."
+            f"{hint}"
+            f"Try search_datasets() to discover valid IDs, or list_curated() "
+            f"to enumerate. All 7 IDs: {ids}"
         )
-    client = await _get_client()
     try:
-        return await fetch_dataset(
-            client,
+        return await _fetch_with_stale_signal(
             cd,
             filters_validated,
             None,
@@ -472,7 +555,11 @@ async def latest(
     except FetchError as e:
         raise ValueError(str(e)) from e
     except AEMOAPIError as e:
-        raise ValueError(f"NEMWEB request failed: {e}") from e
+        raise ValueError(
+            f"NEMWEB request failed: {e}. "
+            f"NEMWEB occasionally rolls files in/out of /Reports/Current/; "
+            f"try retrying in 30s."
+        ) from e
 
 
 @mcp.tool
