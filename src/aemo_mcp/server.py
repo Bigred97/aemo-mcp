@@ -1,0 +1,504 @@
+"""FastMCP server entrypoint for aemo-mcp.
+
+Five tools, all thin orchestrators over `client`, `fetch`, `curated`,
+`feeds`, and `shaping`. The shared `AEMOClient` is created lazily so
+importing this module doesn't open the SQLite cache.
+
+Validation guards mirror rba-mcp 0.1.9 / abs-mcp 0.2.x: explicit input-type
+checks, URL-safe patterns for dataset IDs / region codes / period strings,
+helpful error messages with "Try X" hints.
+"""
+from __future__ import annotations
+
+import asyncio
+import re
+from typing import Annotated, Any, Literal
+
+from fastmcp import FastMCP
+from pydantic import Field
+
+from . import curated, feeds
+from .client import AEMOAPIError, AEMOClient
+from .fetch import FetchError, fetch_dataset
+from .models import DataResponse, DatasetDetail, DatasetSummary
+
+# Dataset IDs are snake_case ASCII.
+_DATASET_ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+# Periods: YYYY, YYYY-MM, YYYY-MM-DD, optional HH:MM(:SS) tail.
+_PERIOD_PATTERN = re.compile(r"^[0-9TZ:\- ]{4,25}$")
+_VALID_FORMATS = {"records", "series", "csv"}
+
+mcp = FastMCP("aemo-mcp")
+
+_client: AEMOClient | None = None
+_client_lock = asyncio.Lock()
+
+
+async def _get_client() -> AEMOClient:
+    global _client
+    async with _client_lock:
+        if _client is None:
+            _client = AEMOClient()
+        return _client
+
+
+async def reset_client_for_tests() -> None:
+    """Drop the cached client. Tests that span event loops must clear it."""
+    global _client
+    if _client is not None:
+        try:
+            await _client.aclose()
+        except Exception:
+            pass
+        _client = None
+
+
+def _normalize_dataset_id(dataset_id: Any) -> str:
+    if not isinstance(dataset_id, str):
+        raise ValueError(
+            f"dataset_id must be a string, got {type(dataset_id).__name__}. "
+            "Try search_datasets() to discover IDs like 'dispatch_price' or "
+            "'generation_scada'."
+        )
+    normalized = dataset_id.strip().lower()
+    if not normalized:
+        raise ValueError(
+            "dataset_id is empty. Try search_datasets() to discover IDs "
+            "like 'dispatch_price' or 'generation_scada'."
+        )
+    if not _DATASET_ID_PATTERN.match(normalized):
+        raise ValueError(
+            f"dataset_id {dataset_id!r} contains invalid characters — "
+            "use snake_case ASCII like 'dispatch_price', 'generation_scada'. "
+            "Try search_datasets() to discover valid IDs."
+        )
+    return normalized
+
+
+def _validate_filters(filters: Any) -> dict[str, Any] | None:
+    if filters is None:
+        return None
+    if not isinstance(filters, dict):
+        raise ValueError(
+            f"filters must be a dict mapping filter keys to values, got "
+            f"{type(filters).__name__}."
+        )
+    # No deep validation here — fetch._row_matches_filters handles unknown
+    # keys gracefully and the curated YAML enumerates valid filter keys for
+    # error messages in `_check_filter_keys`.
+    return filters
+
+
+def _validate_period(value: Any, field_name: str) -> str | None:
+    if value is None:
+        return None
+    # MCP / LLM clients often send a year as a JSON number rather than a
+    # string. Coerce int → str so both forms work. Exclude bool (subclasses
+    # int) so True/False still raise type errors.
+    if isinstance(value, int) and not isinstance(value, bool):
+        value = str(value)
+    if not isinstance(value, str):
+        raise ValueError(
+            f"{field_name} must be a string in 'YYYY', 'YYYY-MM', "
+            f"'YYYY-MM-DD', or 'YYYY-MM-DD HH:MM' format, "
+            f"got {type(value).__name__}."
+        )
+    s = value.strip()
+    if not s:
+        return None
+    if not _PERIOD_PATTERN.match(s):
+        raise ValueError(
+            f"{field_name} {value!r} has invalid format. "
+            "Use 'YYYY', 'YYYY-MM', 'YYYY-MM-DD', or 'YYYY-MM-DD HH:MM'."
+        )
+    return s
+
+
+def _check_filter_keys(dataset_id: str, filters: dict[str, Any] | None) -> None:
+    if filters is None:
+        return
+    cd = curated.get(dataset_id)
+    if cd is None:
+        return
+    known = {f.key for f in cd.filters}
+    unknown = [k for k in filters if k not in known]
+    if unknown:
+        raise ValueError(
+            f"Unknown filter key(s) {unknown} for dataset '{dataset_id}'. "
+            f"Valid keys: {sorted(known)}. "
+            f"Call describe_dataset('{dataset_id}') to see filter definitions."
+        )
+
+
+@mcp.tool
+async def search_datasets(
+    query: Annotated[
+        str,
+        Field(
+            description=(
+                "Free-text search query. Matches against dataset IDs, names, "
+                "descriptions, filter keys, region values, and search keywords. "
+                "Case-insensitive."
+            ),
+            examples=[
+                "spot price",
+                "demand",
+                "rooftop pv",
+                "generation by fuel",
+                "interconnector",
+                "negative pricing",
+            ],
+        ),
+    ],
+    limit: Annotated[
+        int,
+        Field(
+            description=(
+                "Maximum number of results to return, ranked by relevance."
+            ),
+            examples=[5, 7, 10],
+            ge=1,
+            le=100,
+        ),
+    ] = 10,
+) -> list[DatasetSummary]:
+    """Fuzzy-search the 7 curated AEMO NEM datasets.
+
+    Use this when you don't know the exact dataset_id. The 7 curated
+    datasets cover ~95% of typical NEM analytic queries — spot prices,
+    demand, generation, rooftop PV, interconnector flows, forecasts.
+
+    Examples:
+        # Find the dataset that publishes the spot price
+        results = await search_datasets("spot price")
+        # → [{id: 'dispatch_price', name: 'NEM Dispatch Price ...', ...}]
+
+        # Discover what's available on rooftop solar
+        results = await search_datasets("rooftop pv", limit=5)
+
+    Returns:
+        List of DatasetSummary (id, name, description, cadence), ranked
+        by relevance. All v0 datasets are curated.
+    """
+    if not isinstance(query, str):
+        raise ValueError(
+            f"query must be a string, got {type(query).__name__}. "
+            "Try 'spot price', 'demand', 'rooftop pv', 'interconnector', or "
+            "any other NEM topic."
+        )
+    if not query.strip():
+        raise ValueError(
+            "query is required. Try 'spot price', 'demand', 'rooftop pv', "
+            "'interconnector', 'generation by fuel', or any other NEM topic."
+        )
+    if isinstance(limit, bool) or not isinstance(limit, int):
+        raise ValueError(
+            f"limit must be a positive integer, got {limit!r} "
+            f"({type(limit).__name__})."
+        )
+    if limit < 1:
+        raise ValueError(f"limit must be >= 1, got {limit}.")
+    return feeds.search_datasets(query, limit=limit)
+
+
+@mcp.tool
+async def describe_dataset(
+    dataset_id: Annotated[
+        str,
+        Field(
+            description=(
+                "Dataset ID like 'dispatch_price', 'generation_scada'. "
+                "Use search_datasets() to discover, or list_curated() to "
+                "enumerate. Case-insensitive."
+            ),
+            examples=[
+                "dispatch_price",
+                "dispatch_region",
+                "interconnector_flows",
+                "generation_scada",
+                "rooftop_pv",
+                "predispatch_30min",
+                "daily_summary",
+            ],
+        ),
+    ],
+) -> DatasetDetail:
+    """Describe one NEM dataset — schema, filters, cadence, source URL.
+
+    Examples:
+        detail = await describe_dataset("dispatch_price")
+        # → filters: [{key: "region", values: ["NSW1", "QLD1", ...]}]
+        # → metrics: {rrp: "$/MWh"}
+        # → cadence: "5 min"
+
+    Returns:
+        DatasetDetail with id, name, description, filters, units, source URL,
+        and example invocation strings.
+    """
+    norm = _normalize_dataset_id(dataset_id)
+    cd = curated.get(norm)
+    if cd is None:
+        raise ValueError(
+            f"Dataset {dataset_id!r} is not a known AEMO dataset. "
+            f"Try search_datasets() to discover valid IDs. "
+            f"All 7 v0 IDs: {curated.list_ids()}"
+        )
+    return cd.to_detail()
+
+
+@mcp.tool
+async def get_data(
+    dataset_id: Annotated[
+        str,
+        Field(
+            description=(
+                "Dataset ID like 'dispatch_price'. Use search_datasets() to "
+                "discover."
+            ),
+            examples=[
+                "dispatch_price",
+                "dispatch_region",
+                "interconnector_flows",
+                "generation_scada",
+                "rooftop_pv",
+                "predispatch_30min",
+                "daily_summary",
+            ],
+        ),
+    ],
+    filters: Annotated[
+        dict[str, Any] | None,
+        Field(
+            description=(
+                "Dict of filter key → value(s). Common filters: 'region' "
+                "(NSW1/QLD1/SA1/TAS1/VIC1), 'interconnector' (V-SA/Basslink/...), "
+                "'duid' (unit ID), 'fuel' (black_coal/gas/wind/solar/battery/...). "
+                "Call describe_dataset(dataset_id) to see the valid filters."
+            ),
+            examples=[
+                {"region": "NSW1"},
+                {"region": "QLD1", "fuel": "black_coal"},
+                {"interconnector": "V-SA"},
+                {"duid": "ER01"},
+            ],
+        ),
+    ] = None,
+    start_period: Annotated[
+        str | int | None,
+        Field(
+            description=(
+                "Inclusive start of the period window in AEMO market time "
+                "(UTC+10). Accepts 'YYYY', 'YYYY-MM', 'YYYY-MM-DD', or "
+                "'YYYY-MM-DD HH:MM'. Defaults to None which fetches just "
+                "the most recent NEMWEB file for the dataset."
+            ),
+            examples=["2026-05-14", "2026-05-13 09:00", 2026],
+        ),
+    ] = None,
+    end_period: Annotated[
+        str | int | None,
+        Field(
+            description="Inclusive end. Same format as start_period.",
+            examples=["2026-05-14 23:55", "2026-05-14"],
+        ),
+    ] = None,
+    format: Annotated[
+        Literal["records", "series", "csv"],
+        Field(
+            description=(
+                "Response shape. 'records' (default): flat list of "
+                "observations. 'series': observations grouped by dimensions. "
+                "'csv': returns the result as a CSV string in the `csv` field."
+            ),
+            examples=["records", "series", "csv"],
+        ),
+    ] = "records",
+) -> DataResponse:
+    """Query an AEMO NEM dataset and return observations.
+
+    Examples:
+        # Latest NSW dispatch price (preferred over latest() if you want
+        # a window)
+        resp = await get_data("dispatch_price", filters={"region": "NSW1"})
+
+        # Whole-day NSW dispatch price for a specific day
+        resp = await get_data(
+            "dispatch_price",
+            filters={"region": "NSW1"},
+            start_period="2026-05-13",
+            end_period="2026-05-13"
+        )
+
+        # Generation by fuel for QLD, current
+        resp = await get_data("generation_scada", filters={"region": "QLD1"})
+
+        # All 6 interconnectors right now
+        resp = await get_data("interconnector_flows")
+
+    Returns:
+        DataResponse with records, units, period bounds, NEMWEB source URL,
+        and AEMO attribution.
+    """
+    norm = _normalize_dataset_id(dataset_id)
+    filters_validated = _validate_filters(filters)
+    _check_filter_keys(norm, filters_validated)
+    start_validated = _validate_period(start_period, "start_period")
+    end_validated = _validate_period(end_period, "end_period")
+
+    if format is None:
+        fmt_norm = "records"
+    elif isinstance(format, str):
+        fmt_norm = format.lower()
+    else:
+        raise ValueError(
+            f"format must be a string, got {type(format).__name__}. "
+            f"Valid options: {sorted(_VALID_FORMATS)}"
+        )
+    if fmt_norm not in _VALID_FORMATS:
+        raise ValueError(
+            f"Unknown format {format!r}. Valid options: {sorted(_VALID_FORMATS)}"
+        )
+
+    if start_validated and end_validated and start_validated > end_validated:
+        raise ValueError(
+            f"end_period ({end_validated}) is before start_period "
+            f"({start_validated}). Try swapping them."
+        )
+
+    cd = curated.get(norm)
+    if cd is None:
+        raise ValueError(
+            f"Dataset {dataset_id!r} is not a known AEMO dataset. "
+            f"Try search_datasets() to discover valid IDs."
+        )
+
+    client = await _get_client()
+    try:
+        return await fetch_dataset(
+            client,
+            cd,
+            filters_validated,
+            start_validated,
+            end_validated,
+            fmt_norm,
+            only_latest=False,
+        )
+    except FetchError as e:
+        raise ValueError(str(e)) from e
+    except AEMOAPIError as e:
+        raise ValueError(f"NEMWEB request failed: {e}") from e
+
+
+@mcp.tool
+async def latest(
+    dataset_id: Annotated[
+        str,
+        Field(
+            description=(
+                "Dataset ID like 'dispatch_price'. Use search_datasets() to "
+                "discover."
+            ),
+            examples=[
+                "dispatch_price",
+                "dispatch_region",
+                "interconnector_flows",
+                "generation_scada",
+                "rooftop_pv",
+            ],
+        ),
+    ],
+    filters: Annotated[
+        dict[str, Any] | None,
+        Field(
+            description=(
+                "Optional filter dict. Same shape as get_data — narrow to a "
+                "region, interconnector, fuel, etc."
+            ),
+            examples=[
+                {"region": "NSW1"},
+                {"region": "QLD1", "fuel": "wind"},
+                {"interconnector": "V-SA"},
+            ],
+        ),
+    ] = None,
+) -> DataResponse:
+    """Return the most recent interval(s) for a NEM dataset.
+
+    For 5-min feeds (dispatch_price, dispatch_region, interconnector_flows,
+    generation_scada): returns the most recent 5-minute interval, typically
+    1-2 minutes after the interval close.
+
+    For 30-min feeds (rooftop_pv, predispatch_30min): the most recent
+    half-hour.
+
+    For daily feeds (daily_summary): yesterday's data.
+
+    Examples:
+        # Current NSW spot price
+        resp = await latest("dispatch_price", filters={"region": "NSW1"})
+
+        # Current generation mix in QLD
+        resp = await latest("generation_scada", filters={"region": "QLD1"})
+
+        # Current flow across Heywood
+        resp = await latest("interconnector_flows", filters={"interconnector": "V-SA"})
+
+    Returns:
+        DataResponse with one observation per filtered (dimension, metric)
+        tuple at the most recent interval. `stale=True` flag indicates the
+        most recent interval is older than 2× the feed cadence (NEMWEB
+        delay).
+    """
+    norm = _normalize_dataset_id(dataset_id)
+    filters_validated = _validate_filters(filters)
+    _check_filter_keys(norm, filters_validated)
+    cd = curated.get(norm)
+    if cd is None:
+        raise ValueError(
+            f"Dataset {dataset_id!r} is not a known AEMO dataset. "
+            f"Try search_datasets() to discover valid IDs."
+        )
+    client = await _get_client()
+    try:
+        return await fetch_dataset(
+            client,
+            cd,
+            filters_validated,
+            None,
+            None,
+            "records",
+            only_latest=True,
+        )
+    except FetchError as e:
+        raise ValueError(str(e)) from e
+    except AEMOAPIError as e:
+        raise ValueError(f"NEMWEB request failed: {e}") from e
+
+
+@mcp.tool
+def list_curated() -> list[str]:
+    """List the 7 curated AEMO NEM dataset IDs.
+
+    These cover ~95% of typical NEM analytic queries: spot prices, regional
+    demand and generation, interconnector flows, unit-level SCADA,
+    rooftop PV (actual + forecast), 30-min predispatch forecasts, and
+    daily-settled summaries.
+
+    Example:
+        ids = list_curated()
+        # → ['daily_summary', 'dispatch_price', 'dispatch_region',
+        #    'generation_scada', 'interconnector_flows',
+        #    'predispatch_30min', 'rooftop_pv']
+
+    Returns:
+        Sorted list of dataset IDs. Always 7 entries today.
+    """
+    return curated.list_ids()
+
+
+def main() -> None:
+    mcp.run(transport="stdio")
+
+
+if __name__ == "__main__":
+    main()

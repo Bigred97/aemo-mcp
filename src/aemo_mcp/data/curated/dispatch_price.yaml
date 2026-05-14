@@ -1,0 +1,54 @@
+id: dispatch_price
+name: NEM Dispatch Price (5-minute)
+description: |
+  5-minute regional reference price (RRP) for energy in the National
+  Electricity Market, by region. The "spot price" you see quoted in the
+  press. Source: DISPATCHIS / DISPATCH.PRICE.
+
+  This is the dispatch price set every 5 minutes by AEMO's central dispatch
+  engine, post-5MS (Oct 2021). Each row covers one (region × 5-min interval)
+  pair. Negative prices are real and meaningful — they indicate generation
+  oversupply (typically rooftop solar + wind on a sunny mild day).
+cadence: 5 min
+cache_kind: live
+settlement_column: SETTLEMENTDATE
+source_url: http://nemweb.com.au/Reports/Current/DispatchIS_Reports/
+
+folders:
+  - path: /Reports/Current/DispatchIS_Reports/
+    filename_regex: "PUBLIC_DISPATCHIS_\\d{12}_\\d+\\.zip"
+    sections:
+      - name: DISPATCH.PRICE
+
+filters:
+  - key: region
+    description: NEM region — NSW1, QLD1, SA1, TAS1, VIC1.
+    values: [NSW1, QLD1, SA1, TAS1, VIC1]
+    column: REGIONID
+
+metrics:
+  - key: rrp
+    source_column: RRP
+    description: Regional reference price (energy spot price)
+    unit: $/MWh
+
+search_keywords:
+  - spot price
+  - dispatch price
+  - rrp
+  - electricity price
+  - energy price
+  - 5 minute price
+  - five minute price
+  - negative price
+  - negative pricing
+  - nsw spot
+  - qld spot
+  - sa spot
+  - vic spot
+  - tas spot
+
+examples:
+  - 'latest(dataset_id="dispatch_price", filters={"region": "NSW1"})  # current NSW spot price'
+  - 'get_data(dataset_id="dispatch_price", filters={"region": "SA1"}, start_period="2026-05-13")  # SA spot for one day'
+  - 'get_data(dataset_id="dispatch_price", filters={"region": "VIC1"}, start_period="2026-05-01", end_period="2026-05-07")  # one week of VIC dispatch'

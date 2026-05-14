@@ -1,0 +1,75 @@
+id: generation_scada
+name: NEM Unit Generation SCADA (5-minute)
+description: |
+  5-minute DUID-level SCADA megawatt output for every generating unit
+  registered in the NEM. Source: DISPATCH.UNIT_SCADA in PUBLIC_DISPATCHSCADA.
+
+  Each row reports one (unit × 5-min interval) pair. To aggregate by fuel
+  or region, pass `filters={"fuel": "black_coal"}` or `filters={"region": "QLD1"}`
+  — the server joins against a bundled DUID snapshot (DUDETAILSUMMARY) to
+  resolve those into a DUID allow-list.
+
+  Recognised fuel buckets: black_coal, brown_coal, gas, hydro, wind, solar,
+  battery, biomass, distillate.
+cadence: 5 min
+cache_kind: live
+settlement_column: SETTLEMENTDATE
+source_url: http://nemweb.com.au/Reports/Current/Dispatch_SCADA/
+
+folders:
+  - path: /Reports/Current/Dispatch_SCADA/
+    filename_regex: "PUBLIC_DISPATCHSCADA_\\d{12}_\\d+\\.zip"
+    sections:
+      - name: DISPATCH.UNIT_SCADA
+
+filters:
+  - key: duid
+    description: |
+      Dispatchable Unit ID (e.g. BW01, ER02, LY_W1). Pass a single string or
+      a list. Use describe_dataset to see the bundled snapshot.
+    column: DUID
+  - key: region
+    description: |
+      Filter to units in the given NEM region. Resolved via the bundled DUID
+      snapshot — pass NSW1, QLD1, SA1, TAS1, or VIC1.
+    values: [NSW1, QLD1, SA1, TAS1, VIC1]
+    column: DUID
+  - key: fuel
+    description: |
+      Filter to units of the given fuel type. Resolved via the bundled DUID
+      snapshot.
+    values: [black_coal, brown_coal, gas, hydro, wind, solar, battery, biomass, distillate]
+    column: DUID
+
+metrics:
+  - key: scada_mw
+    source_column: SCADAVALUE
+    description: Unit SCADA megawatt output for the interval
+    unit: MW
+
+search_keywords:
+  - generation
+  - unit generation
+  - scada
+  - duid
+  - fuel mix
+  - generation mix
+  - by fuel
+  - coal generation
+  - gas generation
+  - wind generation
+  - solar generation
+  - hydro generation
+  - battery generation
+  - eraring
+  - bayswater
+  - loy yang
+  - yallourn
+  - black coal
+  - brown coal
+  - renewable generation
+
+examples:
+  - 'latest(dataset_id="generation_scada", filters={"region": "QLD1"})  # current QLD unit dispatch'
+  - 'latest(dataset_id="generation_scada", filters={"fuel": "wind"})  # current wind output across NEM'
+  - 'get_data(dataset_id="generation_scada", filters={"duid": "ER01"}, start_period="2026-05-13")  # one Eraring unit, one day'

@@ -1,0 +1,62 @@
+id: predispatch_30min
+name: NEM Predispatch — 30-minute (~40h horizon)
+description: |
+  Regional 30-minute predispatch forecast — AEMO's half-hourly look-ahead
+  out to ~40 hours from gate closure. Source: PREDISPATCHIS / PREDISPATCH.REGIONSUM.
+
+  Use this for forward price/demand curves: "what does AEMO expect demand
+  to be tomorrow morning?", "what's the forecast price curve for the next
+  24 hours?". The forecast is updated every 30 minutes.
+
+  v0 exposes the region-summary section only (demand + dispatchable + price
+  in one row per region per future 30-min period). Predispatch price and
+  interconnector forecasts are available in the same ZIP and will be added
+  in a future release.
+cadence: 30 min
+cache_kind: forecast
+settlement_column: DATETIME
+source_url: http://nemweb.com.au/Reports/Current/PredispatchIS_Reports/
+
+folders:
+  - path: /Reports/Current/PredispatchIS_Reports/
+    filename_regex: "PUBLIC_PREDISPATCHIS_\\d{12}_\\d{14}\\.zip"
+    sections:
+      - name: PREDISPATCH.REGIONSUM
+      - name: PREDISPATCH.REGION_PRICES
+        discriminator: prices
+
+filters:
+  - key: region
+    description: NEM region — NSW1, QLD1, SA1, TAS1, VIC1.
+    values: [NSW1, QLD1, SA1, TAS1, VIC1]
+    column: REGIONID
+
+metrics:
+  - key: total_demand
+    source_column: TOTALDEMAND
+    description: Forecast total demand (MW)
+    unit: MW
+  - key: available_generation
+    source_column: AVAILABLEGENERATION
+    description: Forecast available generation (MW)
+    unit: MW
+  - key: rrp
+    source_column: RRP
+    description: Forecast regional reference price ($/MWh)
+    unit: $/MWh
+
+search_keywords:
+  - predispatch
+  - forecast
+  - 30 minute forecast
+  - half hour forecast
+  - demand forecast
+  - price forecast
+  - tomorrow demand
+  - tomorrow price
+  - forward curve
+  - aemo forecast
+
+examples:
+  - 'get_data(dataset_id="predispatch_30min", filters={"region": "NSW1"})  # NSW forecast out 40h'
+  - 'latest(dataset_id="predispatch_30min", filters={"region": "VIC1"})  # most recent VIC forecast snapshot'

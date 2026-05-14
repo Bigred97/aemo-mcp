@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "aemo": {
+      "command": "uvx",
+      "args": ["--upgrade", "aemo-mcp"]
+    }
+  }
+}

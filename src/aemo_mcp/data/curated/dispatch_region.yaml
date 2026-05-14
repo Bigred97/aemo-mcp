@@ -1,0 +1,64 @@
+id: dispatch_region
+name: NEM Regional Demand + Generation (5-minute)
+description: |
+  5-minute regional summary of demand and supply for each NEM region:
+  total demand, scheduled generation, semi-scheduled generation, dispatchable
+  generation, and net interchange (interconnector flow). Source: DISPATCHIS /
+  DISPATCH.REGIONSUM.
+
+  Use this for "what is total demand in QLD right now?" or to track the
+  balance between scheduled coal/gas and semi-scheduled wind+utility-solar
+  at 5-minute resolution.
+cadence: 5 min
+cache_kind: live
+settlement_column: SETTLEMENTDATE
+source_url: http://nemweb.com.au/Reports/Current/DispatchIS_Reports/
+
+folders:
+  - path: /Reports/Current/DispatchIS_Reports/
+    filename_regex: "PUBLIC_DISPATCHIS_\\d{12}_\\d+\\.zip"
+    sections:
+      - name: DISPATCH.REGIONSUM
+
+filters:
+  - key: region
+    description: NEM region — NSW1, QLD1, SA1, TAS1, VIC1.
+    values: [NSW1, QLD1, SA1, TAS1, VIC1]
+    column: REGIONID
+
+metrics:
+  - key: total_demand
+    source_column: TOTALDEMAND
+    description: Total demand within the region (MW)
+    unit: MW
+  - key: available_generation
+    source_column: AVAILABLEGENERATION
+    description: Total scheduled generation availability (MW)
+    unit: MW
+  - key: dispatchable_generation
+    source_column: DISPATCHABLEGENERATION
+    description: Total dispatchable generation (scheduled + semi-scheduled, MW)
+    unit: MW
+  - key: net_interchange
+    source_column: NETINTERCHANGE
+    description: Net interconnector flow (MW). Positive = export from region.
+    unit: MW
+
+search_keywords:
+  - demand
+  - total demand
+  - electricity demand
+  - generation
+  - supply
+  - regional demand
+  - interchange
+  - net interchange
+  - nsw demand
+  - qld demand
+  - sa demand
+  - vic demand
+  - tas demand
+
+examples:
+  - 'latest(dataset_id="dispatch_region", filters={"region": "QLD1"})  # current QLD demand + supply snapshot'
+  - 'get_data(dataset_id="dispatch_region", filters={"region": "NSW1"}, start_period="2026-05-13")  # full day of NSW demand'

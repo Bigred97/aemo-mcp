@@ -1,0 +1,61 @@
+id: interconnector_flows
+name: NEM Interconnector Flows (5-minute)
+description: |
+  5-minute MW flow and losses across the six NEM interconnectors. Source:
+  DISPATCHIS / DISPATCH.INTERCONNECTORRES.
+
+  Interconnectors connect adjacent NEM regions:
+    - N-Q-MNSP1 (Terranora):    QLD ↔ NSW (Directlink, MNSP)
+    - NSW1-QLD1 (Queensland-NSW): QLD ↔ NSW main link
+    - T-V-MNSP1 (Basslink):      TAS ↔ VIC (HVDC, MNSP)
+    - V-S-MNSP1 (Murraylink):    VIC ↔ SA (HVDC, MNSP)
+    - V-SA (Heywood):            VIC ↔ SA main link
+    - VIC1-NSW1 (Vic-NSW):       VIC ↔ NSW main link
+
+  Positive MW = flow in the "from-to" direction defined by the interconnector
+  ID (e.g. N-Q-MNSP1 positive = QLD to NSW). Losses are always >= 0.
+cadence: 5 min
+cache_kind: live
+settlement_column: SETTLEMENTDATE
+source_url: http://nemweb.com.au/Reports/Current/DispatchIS_Reports/
+
+folders:
+  - path: /Reports/Current/DispatchIS_Reports/
+    filename_regex: "PUBLIC_DISPATCHIS_\\d{12}_\\d+\\.zip"
+    sections:
+      - name: DISPATCH.INTERCONNECTORRES
+
+filters:
+  - key: interconnector
+    description: Interconnector ID.
+    values: [N-Q-MNSP1, NSW1-QLD1, T-V-MNSP1, V-S-MNSP1, V-SA, VIC1-NSW1]
+    column: INTERCONNECTORID
+
+metrics:
+  - key: mw_flow
+    source_column: MWFLOW
+    description: Megawatt flow across the interconnector
+    unit: MW
+  - key: mw_losses
+    source_column: MWLOSSES
+    description: Megawatt losses on the interconnector
+    unit: MW
+
+search_keywords:
+  - interconnector
+  - interconnectors
+  - heywood
+  - basslink
+  - murraylink
+  - terranora
+  - directlink
+  - interregional flow
+  - transmission flow
+  - tasmania interconnector
+  - sa interconnector
+  - vic to sa
+  - nsw to qld
+
+examples:
+  - 'latest(dataset_id="interconnector_flows", filters={"interconnector": "V-SA"})  # current Heywood flow'
+  - 'get_data(dataset_id="interconnector_flows", start_period="2026-05-13")  # all 6 interconnectors, full day'

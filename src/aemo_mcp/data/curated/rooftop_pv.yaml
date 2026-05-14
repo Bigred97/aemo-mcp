@@ -1,0 +1,64 @@
+id: rooftop_pv
+name: NEM Rooftop PV — Actual + Forecast (30-minute)
+description: |
+  30-minute regional rooftop solar PV output for the NEM, both actual
+  measurement and 30-min-ahead forecast. Source: ROOFTOP_PV/ACTUAL and
+  ROOFTOP_PV/FORECAST on NEMWEB.
+
+  The "section" filter switches between actual (measured by AEMO via
+  satellite imagery + DER signals) and forecast (AEMO's 30-min satellite-
+  based estimate of upcoming rooftop output). One row per (region ×
+  30-min interval × section).
+cadence: 30 min
+cache_kind: half_hour
+settlement_column: INTERVAL_DATETIME
+source_url: http://nemweb.com.au/Reports/Current/ROOFTOP_PV/
+
+folders:
+  - path: /Reports/Current/ROOFTOP_PV/ACTUAL/
+    filename_regex: "PUBLIC_ROOFTOP_PV_ACTUAL_(MEASUREMENT_)?\\d{14}_\\d+\\.zip"
+    discriminator: actual
+    sections:
+      - name: ROOFTOP.ACTUAL
+        discriminator: actual
+  - path: /Reports/Current/ROOFTOP_PV/FORECAST/
+    filename_regex: "PUBLIC_ROOFTOP_PV_FORECAST_\\d{14}_\\d+\\.zip"
+    discriminator: forecast
+    sections:
+      - name: ROOFTOP.FORECAST
+        discriminator: forecast
+
+filters:
+  - key: region
+    description: NEM region — NSW1, QLD1, SA1, TAS1, VIC1.
+    values: [NSW1, QLD1, SA1, TAS1, VIC1]
+    column: REGIONID
+  - key: section
+    description: 'actual or forecast'
+    values: [actual, forecast]
+
+metrics:
+  - key: power_mw
+    source_column: POWER
+    description: Rooftop PV output (MW)
+    unit: MW
+  - key: power_mean_mw
+    source_column: POWERMEAN
+    description: Forecast mean rooftop PV output (MW)
+    unit: MW
+
+search_keywords:
+  - rooftop pv
+  - rooftop solar
+  - solar pv
+  - distributed solar
+  - dpv
+  - household solar
+  - residential solar
+  - rooftop forecast
+  - solar forecast
+  - der
+
+examples:
+  - 'latest(dataset_id="rooftop_pv", filters={"region": "NSW1", "section": "actual"})  # latest NSW measured rooftop PV'
+  - 'get_data(dataset_id="rooftop_pv", filters={"section": "forecast"}, start_period="2026-05-15")  # tomorrow''s rooftop forecast NEM-wide'

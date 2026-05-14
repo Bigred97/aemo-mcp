@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aemo-mcp"
+version = "0.1.0"
+description = "MCP server for the Australian Energy Market Operator (AEMO) NEM. Plain-English access to 5-min dispatch prices, regional demand, interconnector flows, generation by fuel, and rooftop PV."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Harry Vass" }]
+keywords = [
+    "mcp",
+    "aemo",
+    "nem",
+    "electricity",
+    "energy",
+    "australia",
+    "spot-price",
+    "dispatch",
+    "rooftop-pv",
+    "claude",
+    "fastmcp",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+    "fastmcp>=2.0,<4",
+    "httpx>=0.27",
+    "pydantic>=2.7",
+    "rapidfuzz>=3.9",
+    "aiosqlite>=0.20",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "respx>=0.21",
+]
+
+[project.scripts]
+aemo-mcp = "aemo_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/Bigred97/aemo-mcp"
+Issues = "https://github.com/Bigred97/aemo-mcp/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aemo_mcp"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = ["live: hits the real NEMWEB CDN"]
+addopts = "-m 'not live'"
+testpaths = ["tests"]
+pythonpath = ["src"]

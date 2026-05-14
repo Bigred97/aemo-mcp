@@ -1,0 +1,49 @@
+id: daily_summary
+name: NEM Daily Summary (settled, prior trading day)
+description: |
+  Daily rolled-up summary of the previous trading day's dispatch — settled
+  prices and demand by region. Source: PUBLIC_DAILY / DISPATCH.PRICE.
+
+  AEMO publishes a single compendium ZIP shortly after 04:10 AEST each day
+  covering yesterday's full data, including post-AP (after-price) revisions.
+  Use this for backfill and "weekly average dispatch price for VIC, last 4
+  weeks" type questions where you want settled values rather than the
+  preliminary dispatch values served by `dispatch_price`.
+cadence: Daily
+cache_kind: daily
+settlement_column: SETTLEMENTDATE
+source_url: http://nemweb.com.au/Reports/Current/Daily_Reports/
+
+folders:
+  - path: /Reports/Current/Daily_Reports/
+    filename_regex: "PUBLIC_DAILY_\\d{12}_\\d{14}\\.zip"
+    sections:
+      - name: DISPATCH.PRICE
+
+filters:
+  - key: region
+    description: NEM region — NSW1, QLD1, SA1, TAS1, VIC1.
+    values: [NSW1, QLD1, SA1, TAS1, VIC1]
+    column: REGIONID
+
+metrics:
+  - key: rrp
+    source_column: RRP
+    description: Settled regional reference price ($/MWh)
+    unit: $/MWh
+
+search_keywords:
+  - daily summary
+  - daily report
+  - yesterday
+  - settled price
+  - settlement
+  - post ap
+  - daily aggregate
+  - daily price
+  - settled rrp
+  - daily settlement
+
+examples:
+  - 'latest(dataset_id="daily_summary", filters={"region": "NSW1"})  # yesterday''s settled NSW prices'
+  - 'get_data(dataset_id="daily_summary", filters={"region": "VIC1"}, start_period="2026-04-17", end_period="2026-05-13")  # 4 weeks of VIC settled dispatch'

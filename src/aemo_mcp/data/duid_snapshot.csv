@@ -1,0 +1,129 @@
+DUID,REGION,FUEL,STATION,OWNER
+BW01,NSW1,black_coal,Bayswater,AGL
+BW02,NSW1,black_coal,Bayswater,AGL
+BW03,NSW1,black_coal,Bayswater,AGL
+BW04,NSW1,black_coal,Bayswater,AGL
+ER01,NSW1,black_coal,Eraring,Origin Energy
+ER02,NSW1,black_coal,Eraring,Origin Energy
+ER03,NSW1,black_coal,Eraring,Origin Energy
+ER04,NSW1,black_coal,Eraring,Origin Energy
+VP5,NSW1,black_coal,Vales Point B,Sunset Power
+VP6,NSW1,black_coal,Vales Point B,Sunset Power
+MP1,NSW1,black_coal,Mt Piper,EnergyAustralia
+MP2,NSW1,black_coal,Mt Piper,EnergyAustralia
+TALWA1,NSW1,gas,Tallawarra,EnergyAustralia
+TALWA2,NSW1,gas,Tallawarra B,EnergyAustralia
+URANQ11,NSW1,gas,Uranquinty,Snowy Hydro
+URANQ12,NSW1,gas,Uranquinty,Snowy Hydro
+URANQ13,NSW1,gas,Uranquinty,Snowy Hydro
+URANQ14,NSW1,gas,Uranquinty,Snowy Hydro
+HUMENSW,NSW1,hydro,Hume NSW,Snowy Hydro
+TUMUT3,NSW1,hydro,Tumut 3,Snowy Hydro
+UPPTUMUT,NSW1,hydro,Upper Tumut,Snowy Hydro
+WALGRVG1,NSW1,battery,Wallgrove,AGL
+SAPPHWF1,NSW1,wind,Sapphire Wind Farm,Partners Group
+SILVSWF1,NSW1,wind,Silverton Wind Farm,Powering Australian Renewables
+NEVERSF1,NSW1,solar,Nevertire Solar Farm,Edify Energy
+LIMOSF1,NSW1,solar,Limondale Solar Farm,Innogy
+CALL_A_4,QLD1,black_coal,Callide A,CS Energy
+CALL_B_1,QLD1,black_coal,Callide B,CS Energy
+CALL_B_2,QLD1,black_coal,Callide B,CS Energy
+CALL_C_1,QLD1,black_coal,Callide C,InterGen
+CALL_C_2,QLD1,black_coal,Callide C,InterGen
+GSTONE1,QLD1,black_coal,Gladstone,Rio Tinto
+GSTONE2,QLD1,black_coal,Gladstone,Rio Tinto
+GSTONE3,QLD1,black_coal,Gladstone,Rio Tinto
+GSTONE4,QLD1,black_coal,Gladstone,Rio Tinto
+GSTONE5,QLD1,black_coal,Gladstone,Rio Tinto
+GSTONE6,QLD1,black_coal,Gladstone,Rio Tinto
+KPP_1,QLD1,black_coal,Kogan Creek,CS Energy
+MPP_1,QLD1,black_coal,Millmerran,InterGen
+MPP_2,QLD1,black_coal,Millmerran,InterGen
+STAN-1,QLD1,black_coal,Stanwell,Stanwell Corp
+STAN-2,QLD1,black_coal,Stanwell,Stanwell Corp
+STAN-3,QLD1,black_coal,Stanwell,Stanwell Corp
+STAN-4,QLD1,black_coal,Stanwell,Stanwell Corp
+TARONG#1,QLD1,black_coal,Tarong,Stanwell Corp
+TARONG#2,QLD1,black_coal,Tarong,Stanwell Corp
+TARONG#3,QLD1,black_coal,Tarong,Stanwell Corp
+TARONG#4,QLD1,black_coal,Tarong,Stanwell Corp
+TNPS1,QLD1,black_coal,Tarong North,Stanwell Corp
+SWAN_B_1,QLD1,gas,Swanbank E,Stanwell Corp
+DAANDINE,QLD1,gas,Daandine,APA Group
+COOPGWF1,QLD1,wind,Coopers Gap Wind Farm,AGL
+KIDSTSF1,QLD1,solar,Kidston Solar Farm,Genex
+WANDOAN1,QLD1,solar,Wandoan South Solar Farm,Wirsol
+LY_W1,VIC1,brown_coal,Loy Yang A,AGL
+LY_W2,VIC1,brown_coal,Loy Yang A,AGL
+LY_W3,VIC1,brown_coal,Loy Yang A,AGL
+LY_W4,VIC1,brown_coal,Loy Yang A,AGL
+LOYYB1,VIC1,brown_coal,Loy Yang B,Alinta
+LOYYB2,VIC1,brown_coal,Loy Yang B,Alinta
+YWPS1,VIC1,brown_coal,Yallourn W,EnergyAustralia
+YWPS2,VIC1,brown_coal,Yallourn W,EnergyAustralia
+YWPS3,VIC1,brown_coal,Yallourn W,EnergyAustralia
+YWPS4,VIC1,brown_coal,Yallourn W,EnergyAustralia
+JLA01,VIC1,gas,Jeeralang A,EnergyAustralia
+JLA02,VIC1,gas,Jeeralang A,EnergyAustralia
+JLA03,VIC1,gas,Jeeralang A,EnergyAustralia
+JLA04,VIC1,gas,Jeeralang A,EnergyAustralia
+LNGS1,VIC1,gas,Laverton North,Snowy Hydro
+LNGS2,VIC1,gas,Laverton North,Snowy Hydro
+NPS1,VIC1,gas,Newport,EnergyAustralia
+MURRAY,VIC1,hydro,Murray,Snowy Hydro
+WAUBRAWF,VIC1,wind,Waubra Wind Farm,Acciona
+MACARTH1,VIC1,wind,Macarthur Wind Farm,AGL
+ARWF1,VIC1,wind,Ararat Wind Farm,Renewable Energy Systems
+BULGANA1,VIC1,wind,Bulgana Green Power Hub,Neoen
+BALBL1,VIC1,battery,Ballarat Energy Storage,Energy Australia
+VBBL1,VIC1,battery,Victorian Big Battery,Neoen
+TORRA1,SA1,gas,Torrens Island A,AGL
+TORRA2,SA1,gas,Torrens Island A,AGL
+TORRA3,SA1,gas,Torrens Island A,AGL
+TORRA4,SA1,gas,Torrens Island A,AGL
+TORRB1,SA1,gas,Torrens Island B,AGL
+TORRB2,SA1,gas,Torrens Island B,AGL
+TORRB3,SA1,gas,Torrens Island B,AGL
+TORRB4,SA1,gas,Torrens Island B,AGL
+PPCCGT,SA1,gas,Pelican Point,Engie
+OSB-AG,SA1,gas,Osborne,AGL
+DRYCGT1,SA1,gas,Dry Creek,Engie
+DRYCGT2,SA1,gas,Dry Creek,Engie
+DRYCGT3,SA1,gas,Dry Creek,Engie
+QPS1,SA1,gas,Quarantine,Origin Energy
+QPS2,SA1,gas,Quarantine,Origin Energy
+QPS3,SA1,gas,Quarantine,Origin Energy
+QPS4,SA1,gas,Quarantine,Origin Energy
+QPS5,SA1,gas,Quarantine,Origin Energy
+LKBONNY1,SA1,wind,Lake Bonney Stage 1,Infigen
+LKBONNY2,SA1,wind,Lake Bonney Stage 2,Infigen
+LKBONNY3,SA1,wind,Lake Bonney Stage 3,Infigen
+HALLWF1,SA1,wind,Hallett Wind Farm,AGL
+HALLWF2,SA1,wind,Hallett 2 Wind Farm,AGL
+SNOWNTH1,SA1,wind,Snowtown Stage 1,Trustpower
+SNOWSTH1,SA1,wind,Snowtown Stage 2,Trustpower
+BUNGALAS,SA1,solar,Bungala 1,Enel Green Power
+TB2SF1,SA1,solar,Tailem Bend Solar,Vena Energy
+HPRG1,SA1,battery,Hornsdale Power Reserve,Neoen
+HPRL1,SA1,battery,Hornsdale Power Reserve,Neoen
+BBTHREE1,TAS1,gas,Bell Bay Three,Hydro Tasmania
+BBTHREE2,TAS1,gas,Bell Bay Three,Hydro Tasmania
+BBTHREE3,TAS1,gas,Bell Bay Three,Hydro Tasmania
+TAMAR,TAS1,gas,Tamar Valley CCGT,Hydro Tasmania
+TVCC201,TAS1,gas,Tamar Valley CCGT,Hydro Tasmania
+TVPP104,TAS1,gas,Tamar Valley Peaking,Hydro Tasmania
+GORDON,TAS1,hydro,Gordon,Hydro Tasmania
+JBUTTERS,TAS1,hydro,John Butters,Hydro Tasmania
+LIAPOOTAH,TAS1,hydro,Liapootah,Hydro Tasmania
+POAT110,TAS1,hydro,Poatina,Hydro Tasmania
+POAT220,TAS1,hydro,Poatina,Hydro Tasmania
+REECE1,TAS1,hydro,Reece,Hydro Tasmania
+REECE2,TAS1,hydro,Reece,Hydro Tasmania
+TARRALEAH,TAS1,hydro,Tarraleah,Hydro Tasmania
+TREVALLN,TAS1,hydro,Trevallyn,Hydro Tasmania
+TUNGATIN,TAS1,hydro,Tungatinah,Hydro Tasmania
+MUSSELRO,TAS1,wind,Musselroe Wind Farm,Hydro Tasmania
+WOOLNTH1,TAS1,wind,Woolnorth Bluff Point,Woolnorth Wind Holdings
+WOOLNTH2,TAS1,wind,Woolnorth Studland Bay,Woolnorth Wind Holdings
+GRANWF1,TAS1,wind,Granville Harbour,Palisade
+CATHRWF1,TAS1,wind,Cattle Hill Wind Farm,Goldwind
