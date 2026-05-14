@@ -11,17 +11,9 @@ requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Harry Vass" }]
 keywords = [
-    "mcp",
-    "aemo",
-    "nem",
-    "electricity",
-    "energy",
-    "australia",
-    "spot-price",
-    "dispatch",
-    "rooftop-pv",
-    "claude",
-    "fastmcp",
+    "mcp", "model-context-protocol", "claude", "fastmcp",
+    "aemo", "nem", "electricity", "energy", "spot-price", "dispatch", "rooftop-pv",
+    "australia", "australian", "public-data", "government-data",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -53,7 +45,11 @@ aemo-mcp = "aemo_mcp.server:main"
 
 [project.urls]
 Homepage = "https://github.com/Bigred97/aemo-mcp"
+Documentation = "https://github.com/Bigred97/aemo-mcp#readme"
+Repository = "https://github.com/Bigred97/aemo-mcp"
 Issues = "https://github.com/Bigred97/aemo-mcp/issues"
+Changelog = "https://github.com/Bigred97/aemo-mcp/blob/main/CHANGELOG.md"
+PyPI = "https://pypi.org/project/aemo-mcp/"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/aemo_mcp"]

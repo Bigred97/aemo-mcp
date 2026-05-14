@@ -1,9 +1,10 @@
 # aemo-mcp
 
-[![tests](https://github.com/Bigred97/aemo-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/Bigred97/aemo-mcp/actions/workflows/test.yml)
 [![PyPI](https://img.shields.io/pypi/v/aemo-mcp.svg)](https://pypi.org/project/aemo-mcp/)
 [![Python](https://img.shields.io/pypi/pyversions/aemo-mcp.svg)](https://pypi.org/project/aemo-mcp/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License](https://img.shields.io/pypi/l/aemo-mcp.svg)](https://github.com/Bigred97/aemo-mcp/blob/main/LICENSE)
+[![Tests](https://github.com/Bigred97/aemo-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/Bigred97/aemo-mcp/actions/workflows/test.yml)
+[![CodeQL](https://github.com/Bigred97/aemo-mcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/Bigred97/aemo-mcp/actions/workflows/codeql.yml)
 [![Glama MCP server quality](https://glama.ai/mcp/servers/Bigred97/aemo-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Bigred97/aemo-mcp)
 
 **Ask Claude about Australia's electricity market and get real, current
@@ -235,17 +236,18 @@ Zero-flake validation:
 for i in $(seq 1 10); do uv run pytest -q || break; done
 ```
 
-## Companion MCPs
+## Sister MCPs (Australian Public Data portfolio)
 
-| MCP | Domain |
-|---|---|
-| [abs-mcp](https://github.com/Bigred97/abs-mcp) | ABS macroeconomic statistics (SDMX) |
-| [rba-mcp](https://github.com/Bigred97/rba-mcp) | RBA interest + FX rates (F-tables) |
-| [ato-mcp](https://github.com/Bigred97/ato-mcp) | ATO tax + ACNC charity data |
-| [apra-mcp](https://github.com/Bigred97/apra-mcp) | APRA banking + superannuation statistics |
-| [aihw-mcp](https://github.com/Bigred97/aihw-mcp) | AIHW health + welfare datasets |
-| [asic-mcp](https://github.com/Bigred97/asic-mcp) | ASIC company + financial-adviser registers |
-| [au-weather-mcp](https://github.com/Bigred97/au-weather-mcp) | Australian weather (Open-Meteo + BOM) |
+- [abs-mcp](https://pypi.org/project/abs-mcp/) — Australian Bureau of Statistics (CPI, unemployment, ERP, building approvals)
+- [rba-mcp](https://pypi.org/project/rba-mcp/) — Reserve Bank of Australia (cash rate, lending stats, exchange rates)
+- [ato-mcp](https://pypi.org/project/ato-mcp/) — Australian Taxation Office (tax stats, ACNC charities)
+- [apra-mcp](https://pypi.org/project/apra-mcp/) — Australian Prudential Regulation Authority (banking, insurance, super)
+- [aihw-mcp](https://pypi.org/project/aihw-mcp/) — Australian Institute of Health and Welfare
+- [asic-mcp](https://pypi.org/project/asic-mcp/) — Australian Securities and Investments Commission (company registers)
+- **aemo-mcp** — this one. Australian Energy Market Operator (NEM dispatch, spot prices, generation).
+- [au-weather-mcp](https://pypi.org/project/au-weather-mcp/) — Open-Meteo (Bureau of Meteorology aggregator)
+- [wgea-mcp](https://pypi.org/project/wgea-mcp/) — Workplace Gender Equality Agency
+- [aus-identity](https://pypi.org/project/aus-identity/) — Postcode / state / ABN normalisation helper used by all sisters
 
 ## Author
 
