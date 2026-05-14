@@ -1,0 +1,267 @@
+# aemo-mcp — full reference
+
+> MCP server exposing Australian Energy Market Operator (AEMO) NEMWEB feeds through 5 plain-English tools.
+
+aemo-mcp wraps the NEMWEB CSV/ZIP feeds at nemweb.com.au, exposing the National Electricity Market (NEM) at the cadence AEMO publishes it. 7 curated datasets cover ~95% of typical NEM analytic queries. AEMO market time is UTC+10 year-round (no DST).
+
+This document is a single-file reference: fetch just this file and you should be able to wire up an MCP client and call every tool correctly without ever cloning the repo.
+
+---
+
+## Install
+
+```bash
+uvx --upgrade aemo-mcp
+```
+
+### Claude Desktop
+
+```json
+{
+  "mcpServers": {
+    "aemo": {
+      "command": "uvx",
+      "args": ["--upgrade", "aemo-mcp"]
+    }
+  }
+}
+```
+
+### Cursor
+
+```json
+{
+  "mcpServers": {
+    "aemo": {
+      "command": "uvx",
+      "args": ["--upgrade", "aemo-mcp"]
+    }
+  }
+}
+```
+
+---
+
+## Trust contract
+
+Every `DataResponse` carries:
+
+```
+source             "Australian Energy Market Operator"
+source_url         the NEMWEB folder the data came from
+attribution        AEMO Copyright Permissions verbatim attribution string
+retrieved_at       UTC timestamp
+server_version     importlib.metadata.version("aemo-mcp")
+interval_start     ISO-8601 in AEMO market time (UTC+10)
+interval_end       ISO-8601 in AEMO market time (UTC+10)
+stale              True if latest interval is older than 2× the feed cadence OR cached fallback served
+stale_reason       human-readable when stale=True
+truncated_at       int | None — set when latest() caps a large response
+```
+
+**AEMO data is NOT CC-BY.** AEMO's Copyright Permissions policy is similar in effect (general permission for any purpose with attribution; commercial use allowed) but the canonical attribution string differs from CC-BY. See https://aemo.com.au/privacy-and-legal-notices/copyright-permissions.
+
+Cache TTLs are tuned per feed cadence: `live` 60s (5-min dispatch), `half_hour` 5min (30-min feeds), `forecast` 1h, `daily` 24h, `archive` 7d, `listing` 30s (NEMWEB directory). Timestamped NEMWEB files are immutable once written.
+
+In-flight request deduplication is mandatory at 5-min cadence: concurrent callers for the same URL share one HTTP request.
+
+---
+
+## Tools
+
+### search_datasets(query, limit=10)
+
+Fuzzy-search the 7 curated NEM datasets.
+
+```python
+await search_datasets("spot price")
+# → [{id: 'dispatch_price', name: 'NEM Dispatch Price ...', cadence: '5 min', ...}]
+```
+
+### describe_dataset(dataset_id)
+
+Schema + filters + cadence + source URL for one dataset.
+
+```python
+await describe_dataset("dispatch_price")
+# → filters: [{key: "region", values: ["NSW1", "QLD1", "SA1", "TAS1", "VIC1"]}]
+# → metrics: {rrp: "$/MWh"}
+# → cadence: "5 min"
+```
+
+### get_data(dataset_id, filters=None, start_period=None, end_period=None, format="records")
+
+Query AEMO NEM data. `filters` keys depend on the dataset (region / interconnector / duid / fuel). Period accepts `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or `YYYY-MM-DD HH:MM`. Default (no period) fetches just the most recent NEMWEB file.
+
+```python
+# Whole-day NSW dispatch price
+await get_data("dispatch_price",
+               filters={"region": "NSW1"},
+               start_period="2026-05-13",
+               end_period="2026-05-13")
+
+# Generation by fuel for QLD, current
+await get_data("generation_scada", filters={"region": "QLD1"})
+
+# All 6 interconnectors right now
+await get_data("interconnector_flows")
+```
+
+### latest(dataset_id, filters=None)
+
+Returns the most recent interval(s). For 5-min feeds, ~1-2 minutes after interval close. For forecast feeds (rooftop_pv forecast, predispatch_30min), returns the FULL forward curve from the latest run, not a single collapsed row.
+
+```python
+await latest("dispatch_price", filters={"region": "NSW1"})
+# → resp.records[0]: period='2026-05-14T10:05:00+10:00', value=87.5,
+#    dimensions={"region": "NSW1", "metric": "rrp"}, unit='$/MWh'
+
+await latest("interconnector_flows", filters={"interconnector": "V-SA"})
+```
+
+### list_curated()
+
+```python
+list_curated()
+# → ['daily_summary', 'dispatch_price', 'dispatch_region',
+#    'generation_scada', 'interconnector_flows',
+#    'predispatch_30min', 'rooftop_pv']
+```
+
+---
+
+## Curated datasets (7)
+
+### dispatch_price (5 min)
+
+Regional Reference Price (RRP) per NEM region. From DispatchIS/DISPATCHPRICE.
+
+- filters: region (NSW1/QLD1/SA1/TAS1/VIC1)
+- metric: rrp ($/MWh)
+- cadence: 5 minutes
+- source: nemweb.com.au/Reports/Current/DispatchIS_Reports/
+
+### dispatch_region (5 min)
+
+Demand + scheduled gen + semi-scheduled gen + net interchange per region. From DispatchIS/DISPATCHREGIONSUM.
+
+- filters: region
+- metrics: total_demand (MW), available_generation (MW), net_interchange (MW), ...
+- cadence: 5 minutes
+
+### interconnector_flows (5 min)
+
+MW flow + losses across NEM interconnectors. From DispatchIS/DISPATCHINTERCONNECTORRES.
+
+- filters: interconnector (V-SA, Basslink, NSW1-QLD1, etc.)
+- metrics: meteredmwflow (MW), losses (MW)
+- cadence: 5 minutes
+
+### generation_scada (5 min)
+
+DUID-level MW (every individual generation unit), aggregable by fuel. From Dispatch_SCADA. DUIDs joined against `data/duid_snapshot.csv` for region + fuel attribution.
+
+- filters: region, fuel (black_coal, brown_coal, gas, wind, solar, hydro, battery), duid
+- cadence: 5 minutes
+
+### rooftop_pv (30 min)
+
+Regional rooftop solar — actual + forecast. From ROOFTOP_PV/ACTUAL + ROOFTOP_PV/FORECAST.
+
+- filters: region, section (actual / forecast)
+- cadence: 30 minutes
+
+### predispatch_30min (30 min)
+
+30-minute predispatch forecast, ~40h horizon. From PredispatchIS.
+
+- filters: region, interconnector
+- cadence: 30 minutes
+
+### daily_summary (daily)
+
+Yesterday's full data in one drop. From Daily_Reports.
+
+- cadence: daily
+
+---
+
+## Regions
+
+NSW1 (New South Wales), QLD1 (Queensland), SA1 (South Australia), TAS1 (Tasmania), VIC1 (Victoria). Western Australia (WEM) and the Northern Territory are NOT on the NEM and are out of scope for aemo-mcp.
+
+---
+
+## Worked examples
+
+### Current NSW spot price
+
+```python
+await latest("dispatch_price", filters={"region": "NSW1"})
+```
+
+```json
+{
+  "dataset_id": "dispatch_price",
+  "dataset_name": "NEM Dispatch Price",
+  "query": {"region": "NSW1"},
+  "interval_start": "2026-05-14T10:05:00+10:00",
+  "interval_end": "2026-05-14T10:05:00+10:00",
+  "unit": "$/MWh",
+  "row_count": 1,
+  "records": [
+    {
+      "period": "2026-05-14T10:05:00+10:00",
+      "value": 87.5,
+      "dimensions": {"region": "NSW1", "metric": "rrp"},
+      "unit": "$/MWh"
+    }
+  ],
+  "source": "Australian Energy Market Operator",
+  "source_url": "https://nemweb.com.au/Reports/Current/DispatchIS_Reports/",
+  "attribution": "Source: Australian Energy Market Operator (AEMO). Used with general permission under AEMO's Copyright Permissions policy.",
+  "retrieved_at": "2026-05-14T00:06:12Z",
+  "server_version": "0.1.0",
+  "stale": false,
+  "stale_reason": null
+}
+```
+
+### Negative pricing detection
+
+```python
+resp = await get_data("dispatch_price",
+                      filters={"region": "SA1"},
+                      start_period="2026-05-13")
+negative = [r for r in resp.records if r.value < 0]
+```
+
+### Generation mix by fuel
+
+```python
+resp = await latest("generation_scada", filters={"region": "QLD1"})
+# Aggregate resp.records by dimensions['fuel'] client-side
+```
+
+---
+
+## Gotchas
+
+- **NEMWEB rolls files in/out continuously.** A filename in the directory listing may have moved to /Archive/ between the listing GET and per-file GET. aemo-mcp skips and continues on individual 403/404.
+- **Latest-file detection is purely lexicographic.** AEMO embeds the interval timestamp (`YYYYMMDDHHmm`) as the first 12-digit group in every filename, so `max(filenames)` is the most recent.
+- **Forecast feeds use `latest()` differently** — full forward curve, not a single row per dim.
+- **`stale` has dual meaning** — set True if EITHER latest observation is older than 2× cadence (NEM delay) OR cached fallback was served (graceful degradation). `stale_reason` disambiguates.
+
+---
+
+## Cross-source pairings
+
+- [au-weather-mcp](https://pypi.org/project/au-weather-mcp/) for weather × demand / rooftop PV correlation
+- [abs-mcp](https://pypi.org/project/abs-mcp/) for state population × per-capita consumption
+- [aus-identity](https://pypi.org/project/aus-identity/) (note: AEMO region codes are NSW1/QLD1/..., not the standard state codes — aus-identity doesn't currently handle the `1` suffix)
+
+---
+
+## License
+
+aemo-mcp server code is MIT-licensed. AEMO data is used under AEMO Copyright Permissions (general permission for any purpose with attribution).

@@ -1,54 +1,36 @@
 # aemo-mcp
 
-MCP server wrapping AEMO NEMWEB feeds. Exposes 7 curated Australian National
-Electricity Market (NEM) datasets through 5 plain-English tools.
+> MCP server exposing Australian Energy Market Operator (AEMO) NEMWEB feeds through 5 plain-English tools — 5-minute spot prices, regional demand, generation by fuel, interconnector flows, rooftop PV, predispatch forecasts.
+
+aemo-mcp is the Australian Energy Market Operator (AEMO) member of the Australian Public Data MCP portfolio. It wraps the NEMWEB CSV/ZIP feeds at nemweb.com.au, exposing the National Electricity Market (NEM) at the cadence AEMO publishes it: 5-minute dispatch intervals, 30-minute rooftop PV and predispatch, daily settled summaries.
+
+7 curated datasets cover ~95% of typical NEM analytic queries. Every response carries AEMO's Copyright Permissions attribution (general permission for any purpose with attribution; commercial use allowed). AEMO market time is UTC+10 year-round (no DST). NEMWEB rolls files between `/Reports/Current/` and `/Reports/Archive/` continuously; aemo-mcp auto-pivots to Archive for windows older than 4 hours and dedupes in-flight HTTP requests to avoid hammering AEMO at 5-min cadence.
+
+## Documentation
+
+- [README](https://github.com/Bigred97/aemo-mcp/blob/main/README.md): Full setup + 5-tool usage + worked examples
+- [CHANGELOG](https://github.com/Bigred97/aemo-mcp/blob/main/CHANGELOG.md): Release history
+- [PyPI](https://pypi.org/project/aemo-mcp/): `uvx --upgrade aemo-mcp`
 
 ## Tools
 
-- `search_datasets(query, limit=10)` — fuzzy search the 7 curated NEM datasets.
-- `describe_dataset(dataset_id)` — schema, filters, and source URL for one dataset.
-- `get_data(dataset_id, filters, start_period, end_period, format)` — query data.
-- `latest(dataset_id, filters)` — most recent interval for time-series feeds.
-- `list_curated()` — list the 7 curated dataset IDs.
+- search_datasets(query, limit=10): Fuzzy search the 7 curated NEM feeds by name, topic, or region
+- describe_dataset(dataset_id): Schema, filters, cadence (5min/30min/daily), source URL, example queries
+- get_data(dataset_id, filters, start_period, end_period, format): Query data within an AEMO market-time window; format='records'|'series'|'csv'
+- latest(dataset_id, filters): Most recent 5-min / 30-min / daily interval. Forecast feeds return the full forward curve from the latest run
+- list_curated(): Enumerate the 7 dataset IDs
 
-## Datasets
+## Example queries
 
-- `dispatch_price` — 5-min regional spot price (RRP) per NEM region
-- `dispatch_region` — 5-min total demand, scheduled gen, semi-scheduled gen, net interchange
-- `interconnector_flows` — 5-min MW flow across the 6 NEM interconnectors
-- `generation_scada` — 5-min DUID-level SCADA MW with fuel attribution
-- `rooftop_pv` — 30-min regional rooftop solar (actual + forecast)
-- `predispatch_30min` — 30-min forecast, ~40h horizon (price, demand, interconnector)
-- `daily_summary` — daily rolled-up compendium of yesterday's price + demand + dispatch
+- "What's the current NSW spot price?"
+- "Did SA hit negative pricing in the last 24 hours?"
+- "Generation by fuel type right now in QLD"
+- "Weekly average dispatch price for VIC, last 4 weeks"
+- "Rooftop PV forecast for tomorrow"
+- "Current flow across Heywood (VIC ↔ SA)"
+- "Total NEM demand right now"
 
-## Regions
+## Optional
 
-NSW1 (New South Wales), QLD1 (Queensland), SA1 (South Australia), TAS1 (Tasmania),
-VIC1 (Victoria). Western Australia (WEM) and the Northern Territory are not on
-the NEM and are out of scope.
-
-## Source + Licence
-
-Data: Australian Energy Market Operator (AEMO), NEMWEB
-https://nemweb.com.au/Reports/Current/
-
-AEMO grants general permission to use AEMO Material for any purpose
-(commercial included) with accurate attribution. Every response carries the
-canonical attribution string in `DataResponse.attribution`. See
-https://aemo.com.au/privacy-and-legal-notices/copyright-permissions.
-
-## Cache behaviour
-
-5-min feeds cache for 60s. 30-min feeds cache for 5min. Forecasts cache for
-1h. Daily archives cache for 24h. Timestamped historical files are
-immutable and cache effectively forever.
-
-## Companion servers
-
-- abs-mcp — Australian Bureau of Statistics (SDMX)
-- rba-mcp — Reserve Bank of Australia (statistical tables)
-- ato-mcp — Australian Taxation Office (taxation + ACNC charity)
-- apra-mcp — Australian Prudential Regulation Authority (banking + super)
-- aihw-mcp — Australian Institute of Health and Welfare
-- asic-mcp — ASIC registers (companies + financial advisers + SMSF auditors)
-- au-weather-mcp — Australian weather (Open-Meteo + BOM)
+- [Sister MCPs](https://github.com/Bigred97?tab=repositories&q=mcp): Other AU public-data MCPs (ABS, RBA, ATO, APRA, AIHW, ASIC, weather, WGEA)
+- [aus-identity](https://pypi.org/project/aus-identity/): State / postcode normalisation used across sisters
