@@ -234,12 +234,16 @@ def build_response(
 
     stale = is_stale(interval_end, _cadence_seconds(dataset.cadence))
 
+    resolved_start = start_period or interval_start
+    resolved_end = end_period or interval_end
+
     return DataResponse(
         dataset_id=dataset.id,
         dataset_name=dataset.name,
         query=user_query,
-        interval_start=start_period or interval_start,
-        interval_end=end_period or interval_end,
+        interval_start=resolved_start,
+        interval_end=resolved_end,
+        period={"start": resolved_start, "end": resolved_end},
         unit=response_unit,
         records=records,
         csv=csv_text,

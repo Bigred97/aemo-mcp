@@ -381,3 +381,65 @@ def test_build_response_explicit_period_bounds_preserved():
     )
     assert resp.interval_start == "2026-05-14"
     assert resp.interval_end == "2026-05-15"
+
+
+def test_data_response_period_populated_alongside_interval_fields():
+    """Canonical `period` dict mirrors aemo-specific interval_start/interval_end."""
+    dataset = _fake_dispatch_price()
+    rows = [
+        {"SETTLEMENTDATE": "2026/05/14 10:00:00", "REGIONID": "NSW1", "RRP": "87.5"},
+        {"SETTLEMENTDATE": "2026/05/14 10:05:00", "REGIONID": "NSW1", "RRP": "88.0"},
+    ]
+    resp = build_response(
+        dataset=dataset,
+        rows=rows,
+        sections_with_discriminator=None,
+        fmt="records",
+        user_query={},
+        source_url="http://x/",
+        start_period=None,
+        end_period=None,
+    )
+    assert resp.period["start"] == resp.interval_start
+    assert resp.period["end"] == resp.interval_end
+    assert resp.period["start"] is not None
+    assert resp.period["end"] is not None
+
+
+def test_data_response_period_when_no_interval():
+    """When no rows produce intervals, period is {start:None,end:None}."""
+    dataset = _fake_dispatch_price()
+    resp = build_response(
+        dataset=dataset,
+        rows=[],
+        sections_with_discriminator=None,
+        fmt="records",
+        user_query={},
+        source_url="http://x/",
+        start_period=None,
+        end_period=None,
+    )
+    assert resp.interval_start is None
+    assert resp.interval_end is None
+    assert resp.period == {"start": None, "end": None}
+
+
+def test_data_response_period_uses_explicit_start_end_when_provided():
+    """Explicit start_period/end_period flow into both interval_* and period."""
+    dataset = _fake_dispatch_price()
+    rows = [
+        {"SETTLEMENTDATE": "2026/05/14 10:00:00", "REGIONID": "NSW1", "RRP": "87.5"}
+    ]
+    resp = build_response(
+        dataset=dataset,
+        rows=rows,
+        sections_with_discriminator=None,
+        fmt="records",
+        user_query={},
+        source_url="http://x/",
+        start_period="2026-05-14",
+        end_period="2026-05-15",
+    )
+    assert resp.interval_start == "2026-05-14"
+    assert resp.interval_end == "2026-05-15"
+    assert resp.period == {"start": "2026-05-14", "end": "2026-05-15"}

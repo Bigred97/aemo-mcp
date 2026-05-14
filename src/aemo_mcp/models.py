@@ -69,6 +69,13 @@ class DataResponse(BaseModel):
     query: dict[str, Any] = Field(default_factory=dict)
     interval_start: str | None = None       # ISO-8601, AEMO market time (UTC+10)
     interval_end: str | None = None         # ISO-8601, AEMO market time (UTC+10)
+    period: dict[str, str | None] = Field(
+        default_factory=lambda: {"start": None, "end": None},
+        description=(
+            "Canonical {start, end} period bounds for cross-sister consumers. "
+            "Populated alongside aemo-specific interval_start/interval_end."
+        ),
+    )
     unit: str | None = None
     records: list[Observation] | list[dict[str, Any]] = Field(default_factory=list)
     csv: str | None = None

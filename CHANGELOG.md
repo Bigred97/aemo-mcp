@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.0] - 2026-05-15
+
+### Added
+- **DataResponse.period**: canonical `{"start", "end"}` dict populated alongside the
+  aemo-specific `interval_start` / `interval_end`. Cross-sister consumers can now read
+  `resp.period["start"]` / `resp.period["end"]` uniformly across the Australian Public
+  Data MCP portfolio. The legacy `interval_start` / `interval_end` fields are preserved
+  unchanged.
+
 ## 0.1.2 (2026-05-15)
 
 Portfolio parity — stale-cache fallback + error-message sweep + dependabot +
