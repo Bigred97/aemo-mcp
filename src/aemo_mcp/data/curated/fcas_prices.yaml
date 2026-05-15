@@ -1,0 +1,112 @@
+id: fcas_prices
+name: NEM Volume-Weighted Average FCAS Prices — Daily
+description: |
+  Daily volume-weighted average (VWA) prices for all eight Frequency Control
+  Ancillary Services (FCAS) markets in the NEM, covering both raise and lower
+  services across four response times: 6-second, 60-second, 5-minute, and
+  regulation. Source: Vwa_Fcas_Prices / TRADING.VWAFCASPRICES.
+
+  Published once daily (for the prior trading day) by AEMO. Each row covers
+  one 30-minute trading interval with the VWA price, volume, and revenue for
+  each of the eight FCAS services across the NEM.
+
+  Use this for: FCAS revenue analysis, generator ancillary services income,
+  system strength market trends, and renewable integration cost assessment.
+cadence: Daily
+cache_kind: daily
+settlement_column: SETTLEMENTDATE
+source_url: https://www.nemweb.com.au/Reports/Current/Vwa_Fcas_Prices/
+
+folders:
+  - path: /Reports/Current/Vwa_Fcas_Prices/
+    filename_regex: "PUBLIC_VWAFCASPRICES_\\d{12}_\\d{14}\\.zip"
+    sections:
+      - name: TRADING.VWAFCASPRICES
+
+filters: []
+
+metrics:
+  - key: lower5min_vwa_price
+    source_column: LOWER5MINVWAPRICE
+    description: Lower 5-minute FCAS volume-weighted average price ($/MW/h)
+    unit: $/MW/h
+  - key: lower5min_volume
+    source_column: LOWER5MINVOLUME
+    description: Lower 5-minute FCAS cleared volume (MW)
+    unit: MW
+  - key: lower6sec_vwa_price
+    source_column: LOWER6SECVWAPRICE
+    description: Lower 6-second FCAS volume-weighted average price ($/MW/h)
+    unit: $/MW/h
+  - key: lower6sec_volume
+    source_column: LOWER6SECVOLUME
+    description: Lower 6-second FCAS cleared volume (MW)
+    unit: MW
+  - key: lower60sec_vwa_price
+    source_column: LOWER60SECVWAPRICE
+    description: Lower 60-second FCAS volume-weighted average price ($/MW/h)
+    unit: $/MW/h
+  - key: lower60sec_volume
+    source_column: LOWER60SECVOLUME
+    description: Lower 60-second FCAS cleared volume (MW)
+    unit: MW
+  - key: lower_reg_vwa_price
+    source_column: LOWERREGVWAPRICE
+    description: Lower regulation FCAS volume-weighted average price ($/MW/h)
+    unit: $/MW/h
+  - key: lower_reg_volume
+    source_column: LOWERREGVOLUME
+    description: Lower regulation FCAS cleared volume (MW)
+    unit: MW
+  - key: raise5min_vwa_price
+    source_column: RAISE5MINVWAPRICE
+    description: Raise 5-minute FCAS volume-weighted average price ($/MW/h)
+    unit: $/MW/h
+  - key: raise5min_volume
+    source_column: RAISE5MINVOLUME
+    description: Raise 5-minute FCAS cleared volume (MW)
+    unit: MW
+  - key: raise6sec_vwa_price
+    source_column: RAISE6SECVWAPRICE
+    description: Raise 6-second FCAS volume-weighted average price ($/MW/h)
+    unit: $/MW/h
+  - key: raise6sec_volume
+    source_column: RAISE6SECVOLUME
+    description: Raise 6-second FCAS cleared volume (MW)
+    unit: MW
+  - key: raise60sec_vwa_price
+    source_column: RAISE60SECVWAPRICE
+    description: Raise 60-second FCAS volume-weighted average price ($/MW/h)
+    unit: $/MW/h
+  - key: raise60sec_volume
+    source_column: RAISE60SECVOLUME
+    description: Raise 60-second FCAS cleared volume (MW)
+    unit: MW
+  - key: raise_reg_vwa_price
+    source_column: RAISEREGVWAPRICE
+    description: Raise regulation FCAS volume-weighted average price ($/MW/h)
+    unit: $/MW/h
+  - key: raise_reg_volume
+    source_column: RAISEREGVOLUME
+    description: Raise regulation FCAS cleared volume (MW)
+    unit: MW
+
+search_keywords:
+  - fcas price
+  - fcas
+  - ancillary services price
+  - frequency control
+  - raise lower
+  - regulation price
+  - contingency price
+  - volume weighted fcas
+  - vwa fcas
+  - 6 second raise
+  - 60 second raise
+  - 5 minute raise
+  - regulation raise
+  - nem ancillary
+
+examples:
+  - 'latest(dataset_id="fcas_prices")  # yesterday''s FCAS prices NEM-wide'
+  - 'get_data(dataset_id="fcas_prices", start_period="2026-05-01", end_period="2026-05-07")  # one week of FCAS prices'

@@ -45,7 +45,7 @@ async def test_list_curated_callable_async_safe():
     from aemo_mcp.server import list_curated
     out = list_curated()
     assert isinstance(out, list)
-    assert len(out) == 7
+    assert len(out) == 9
 
 
 def test_version_string_exposed():

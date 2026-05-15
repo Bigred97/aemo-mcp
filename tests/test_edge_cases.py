@@ -20,9 +20,9 @@ def _isolate_cache(tmp_path: Path, monkeypatch):
 
 # ---- Search edge cases ----
 
-async def test_search_caps_at_seven_datasets():
+async def test_search_caps_at_nine_datasets():
     out = await server.search_datasets("a", limit=100)
-    assert len(out) <= 7
+    assert len(out) <= 9
 
 
 async def test_search_empty_keyword_no_panic_in_haystack():
@@ -52,8 +52,8 @@ async def test_describe_dataset_for_every_curated():
     for ds_id in server.list_curated():
         d = await server.describe_dataset(ds_id)
         assert d.id == ds_id
-        # Every dataset advertises at least one filter + metric
-        assert len(d.filters) >= 1
+        # Every dataset must advertise at least one metric/unit
+        # NEM-wide summary datasets (e.g. fcas_prices) have no region filter
         assert len(d.units) >= 1
 
 

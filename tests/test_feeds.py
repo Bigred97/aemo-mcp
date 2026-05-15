@@ -13,9 +13,9 @@ def _reset_registry():
     curated.reset_registry()
 
 
-def test_list_datasets_returns_seven():
+def test_list_datasets_returns_nine():
     out = feeds.list_datasets()
-    assert len(out) == 7
+    assert len(out) == 9
 
 
 def test_list_datasets_all_curated():
@@ -100,7 +100,7 @@ def test_search_limit_respected():
 
 def test_search_limit_larger_than_dataset_count():
     out = feeds.search_datasets("price", limit=100)
-    assert len(out) <= 7
+    assert len(out) <= 9
 
 
 def test_search_returns_datasetsummary_objects():

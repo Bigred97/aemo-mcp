@@ -1,0 +1,88 @@
+id: trading_price
+name: NEM Trading Price — 30-minute Regional ($/MWh)
+description: |
+  30-minute regional reference price (RRP) for energy in the National
+  Electricity Market — the actual settlement price used for financial
+  settlement of generators and retailers. Source: TradingIS / TRADING.PRICE.
+
+  The trading price is distinct from the 5-minute dispatch price
+  (dispatch_price dataset): generators receive the dispatch price each
+  5-minute interval, but financial settlement is calculated at the
+  30-minute trading interval weighted average. These two prices can diverge
+  significantly during price spikes or fast-ramp events.
+
+  Also exposes FCAS contingency and regulation prices at the trading interval
+  for each direction and service (raise/lower 6-second, 60-second, 5-minute,
+  regulation). Published every 5 minutes with the latest trading interval.
+cadence: 30 min
+cache_kind: half_hour
+settlement_column: SETTLEMENTDATE
+source_url: https://www.nemweb.com.au/Reports/Current/TradingIS_Reports/
+
+folders:
+  - path: /Reports/Current/TradingIS_Reports/
+    filename_regex: "PUBLIC_TRADINGIS_\\d{12}_\\d{16}\\.zip"
+    sections:
+      - name: TRADING.PRICE
+
+filters:
+  - key: region
+    description: NEM region — NSW1, QLD1, SA1, TAS1, VIC1.
+    values: [NSW1, QLD1, SA1, TAS1, VIC1]
+    column: REGIONID
+
+metrics:
+  - key: rrp
+    source_column: RRP
+    description: Regional reference price — 30-minute trading interval settlement price ($/MWh)
+    unit: $/MWh
+  - key: raise6sec_rrp
+    source_column: RAISE6SECRRP
+    description: Raise 6-second FCAS contingency price ($/MW/h)
+    unit: $/MW/h
+  - key: raise60sec_rrp
+    source_column: RAISE60SECRRP
+    description: Raise 60-second FCAS contingency price ($/MW/h)
+    unit: $/MW/h
+  - key: raise5min_rrp
+    source_column: RAISE5MINRRP
+    description: Raise 5-minute FCAS contingency price ($/MW/h)
+    unit: $/MW/h
+  - key: raise_reg_rrp
+    source_column: RAISEREGRRP
+    description: Raise regulation FCAS price ($/MW/h)
+    unit: $/MW/h
+  - key: lower6sec_rrp
+    source_column: LOWER6SECRRP
+    description: Lower 6-second FCAS contingency price ($/MW/h)
+    unit: $/MW/h
+  - key: lower60sec_rrp
+    source_column: LOWER60SECRRP
+    description: Lower 60-second FCAS contingency price ($/MW/h)
+    unit: $/MW/h
+  - key: lower5min_rrp
+    source_column: LOWER5MINRRP
+    description: Lower 5-minute FCAS contingency price ($/MW/h)
+    unit: $/MW/h
+  - key: lower_reg_rrp
+    source_column: LOWERREGRRP
+    description: Lower regulation FCAS price ($/MW/h)
+    unit: $/MW/h
+
+search_keywords:
+  - trading price
+  - 30 minute price
+  - settlement price
+  - trading interval
+  - nem price
+  - regional price
+  - financial settlement
+  - rrp trading
+  - fcas price
+  - ancillary services price
+  - raise lower price
+
+examples:
+  - 'latest(dataset_id="trading_price", filters={"region": "NSW1"})  # current NSW 30-min trading price'
+  - 'get_data(dataset_id="trading_price", filters={"region": "VIC1"}, start_period="2026-05-01", end_period="2026-05-07")  # one week of VIC trading prices'
+  - 'get_data(dataset_id="trading_price", start_period="2026-05-15")  # all regions, full day'

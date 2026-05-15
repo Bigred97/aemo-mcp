@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0] - 2026-05-16
+
+### Added
+
+- **`trading_price` dataset**: 30-minute NEM regional reference price from
+  TradingIS (TRADING.PRICE section). Distinct from the 5-minute dispatch price
+  (`dispatch_price`) — this is the settlement price used for financial
+  settlement of generators and retailers. Also exposes FCAS contingency and
+  regulation prices at the trading interval for all 8 FCAS services.
+- **`fcas_prices` dataset**: daily volume-weighted average (VWA) prices for all
+  8 FCAS markets (raise/lower × 6-second/60-second/5-minute/regulation) from
+  Vwa_Fcas_Prices (TRADING.VWAFCASPRICES). Includes cleared volume and revenue
+  per service. Published once daily for the prior trading day.
+
 ## [0.2.0] - 2026-05-15
 
 ### Added

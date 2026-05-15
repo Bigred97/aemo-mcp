@@ -13,9 +13,9 @@ def _reset_registry():
     curated.reset_registry()
 
 
-def test_list_ids_returns_seven_datasets():
+def test_list_ids_returns_nine_datasets():
     ids = curated.list_ids()
-    assert len(ids) == 7
+    assert len(ids) == 9
     assert ids == sorted(ids)
 
 
@@ -24,10 +24,12 @@ def test_list_ids_specific_set():
         "daily_summary",
         "dispatch_price",
         "dispatch_region",
+        "fcas_prices",
         "generation_scada",
         "interconnector_flows",
         "predispatch_30min",
         "rooftop_pv",
+        "trading_price",
     }
 
 
