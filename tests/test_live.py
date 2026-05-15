@@ -18,7 +18,7 @@ pytestmark = pytest.mark.live
 
 async def test_live_list_curated():
     ids = server.list_curated()
-    assert len(ids) == 7
+    assert len(ids) == 9
 
 
 async def test_live_search_datasets():

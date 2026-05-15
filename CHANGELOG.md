@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1] - 2026-05-16
+
+### Fixed
+
+- `test_live_list_curated` updated to expect 9 datasets (was 7).
+- CLAUDE.md curated dataset list updated to all 9 NEM feeds.
+
 ## [0.3.0] - 2026-05-16
 
 ### Added
