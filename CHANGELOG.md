@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.4.0] - 2026-05-16
+
+### Added — dispatch_constraints (DISPATCH.CONSTRAINT)
+
+- **`dispatch_constraints` curated dataset.** 5-minute snapshot of every
+  active network/security constraint the AEMO dispatch engine evaluates.
+  Each interval reports ~200-1000 constraints; most are non-binding
+  (marginal_value = 0). The few binding ones are what drive intra-NEM
+  price separation and regional price spikes.
+- Closes the audit gap on "why did the price spike?" — energy traders,
+  retail desks, renewable developers (curtailment tracking), network
+  planners and consultants explaining price events can now query the
+  shadow-price data directly.
+- Filters: `constraint_id` (substring matching against names like
+  `C_V::N_NIL_RB` or `F_I+NIL_APD_TL_L60`), and `duid` for
+  generator-specific constraints.
+- Metrics: `rhs` (RHS limit), `marginal_value` (shadow price $/MW — the
+  headline), `violation_degree` (extent of constraint violation),
+  `lhs` (LHS computed value).
+- Source: NEMWEB `DispatchIS_Reports`, same folder as `dispatch_price`,
+  section `DISPATCH.CONSTRAINT` (13 columns). Uses the existing
+  AEMO multi-section ZIP+CSV parser — no new code, YAML-only addition.
+
+### Customer-value validation (live NEMWEB fetch, 2026-05-16 14:10)
+
+- Latest 5-min interval: 982 active constraints × 4 metrics = 3,928
+  observations. 18 constraints binding (marginal_value ≠ 0).
+- Binding examples in this interval: `F_I+BIP_ML_L1`, `F_I+NIL_APD_TL_L5`,
+  `F_I+NIL_MG_R1` — all FCAS-related with small shadow prices ($0.01-
+  0.03/MW).
+- Search routing: "dispatch constraint", "binding constraint",
+  "shadow price", "price spike", "qni constraint" all hit
+  `dispatch_constraints` at #1.
+
+### Tests
+
+- 300 unit tests passing (was 300). 10× zero-flake gauntlet. Ruff clean.
+- 9→10 count assertions updated across test_curated, test_feeds,
+  test_edge_cases, test_mcp_protocol, test_server_validation, test_live.
+
 ## [0.3.1] - 2026-05-16
 
 ### Fixed

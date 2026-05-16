@@ -21,10 +21,11 @@ Note: AEMO's data is NOT CC-BY. Their Copyright Permissions policy is similar
 in effect (general permission with attribution) but the canonical attribution
 string differs — see `models._AEMO_ATTRIBUTION`.
 
-## Curated datasets (9)
+## Curated datasets (10)
 
 dispatch_price · dispatch_region · interconnector_flows · generation_scada ·
-rooftop_pv · predispatch_30min · daily_summary · trading_price · fcas_prices
+rooftop_pv · predispatch_30min · daily_summary · trading_price · fcas_prices ·
+dispatch_constraints
 
 All cover the NEM (NSW1, QLD1, SA1, TAS1, VIC1). Western Australia (WEM) and
 the Northern Territory are not on the NEM and are out of scope.

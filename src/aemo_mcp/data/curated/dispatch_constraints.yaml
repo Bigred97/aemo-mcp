@@ -1,0 +1,86 @@
+id: dispatch_constraints
+name: NEM Dispatch Constraints (5-minute)
+description: |
+  5-minute network and security constraints evaluated by AEMO's central
+  dispatch engine. Source: DISPATCHIS / DISPATCH.CONSTRAINT.
+
+  Each row covers one (constraint × 5-min interval) pair. The dataset
+  records ~200-500 active constraints per interval — most are non-binding
+  (marginal_value = 0). The few that ARE binding are what drive regional
+  price separation, intra-regional dispatch outcomes, and price spikes.
+
+  Use this for: "why did NSW spot price spike to $1,500/MWh at 4pm?"
+  questions (filter to marginal_value != 0 around the interval), "is
+  the QNI binding right now?" inter-regional flow analysis, or
+  identifying which transmission / generator constraints are routinely
+  binding. The CONSTRAINTID name pattern encodes the region and asset
+  (e.g. C_NSW1_DRGT_LOR_NSW = NSW DRGT constraint, C_V::N_NIL_RB = VIC-NSW
+  Reverse Backstop).
+
+  Customer audience: energy traders, retail energy desks, renewable
+  developers benchmarking curtailment, network planners, energy
+  consultants explaining price events.
+cadence: 5 min
+cache_kind: live
+settlement_column: SETTLEMENTDATE
+source_url: http://nemweb.com.au/Reports/Current/DispatchIS_Reports/
+
+folders:
+  - path: /Reports/Current/DispatchIS_Reports/
+    filename_regex: "PUBLIC_DISPATCHIS_\\d{12}_\\d+\\.zip"
+    sections:
+      - name: DISPATCH.CONSTRAINT
+
+filters:
+  - key: constraint_id
+    description: |
+      Constraint name (e.g. C_NSW1_DRGT_LOR_NSW, C_V::N_NIL_RB).
+      Substring matching supported. Pass a list to query multiple.
+    column: CONSTRAINTID
+  - key: duid
+    description: |
+      DUID for unit-specific constraints. Most constraints are network-wide
+      and have an empty DUID column; this filter only matches the
+      generator-specific ones.
+    column: DUID
+
+metrics:
+  - key: rhs
+    source_column: RHS
+    description: Right-hand-side limit value of the constraint (units depend on the constraint — typically MW for network constraints, dimensionless for ratio constraints).
+    unit: MW or ratio
+  - key: marginal_value
+    source_column: MARGINALVALUE
+    description: Shadow price ($/MW). Non-zero means the constraint IS binding — i.e. preventing a more economic dispatch. The headline column.
+    unit: $/MW
+  - key: violation_degree
+    source_column: VIOLATIONDEGREE
+    description: Extent of constraint violation in the constraint's native units. Zero in normal dispatch; non-zero means the engine couldn't find a feasible solution and the constraint was violated.
+    unit: MW or ratio
+  - key: lhs
+    source_column: LHS
+    description: Left-hand-side computed value (the actual flow / quantity being compared to RHS).
+    unit: MW or ratio
+
+search_keywords:
+  - dispatch constraint
+  - constraints
+  - binding constraint
+  - network constraint
+  - security constraint
+  - constraint binding
+  - shadow price
+  - marginal value constraint
+  - price spike explanation
+  - qni constraint
+  - heywood constraint
+  - vic nsw constraint
+  - basslink constraint
+  - transmission constraint
+  - curtailment
+  - generator constraint
+
+examples:
+  - 'latest(dataset_id="dispatch_constraints")  # all active constraints in the most recent 5-min interval'
+  - 'get_data(dataset_id="dispatch_constraints", filters={"constraint_id": "C_V::N"}, start_period="2026-05-15")  # VIC-NSW constraints for one day'
+  - 'get_data(dataset_id="dispatch_constraints", filters={"duid": "BW01"})  # constraints specific to Bayswater Unit 1'

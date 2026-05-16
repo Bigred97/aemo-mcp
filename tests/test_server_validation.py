@@ -159,11 +159,12 @@ async def test_latest_unknown_filter_key():
         await server.latest("dispatch_price", filters={"bogus": "NSW1"})
 
 
-async def test_list_curated_returns_nine():
+async def test_list_curated_returns_ten():
     ids = server.list_curated()
-    assert len(ids) == 9
+    assert len(ids) == 10
     assert set(ids) == {
         "daily_summary",
+        "dispatch_constraints",
         "dispatch_price",
         "dispatch_region",
         "fcas_prices",

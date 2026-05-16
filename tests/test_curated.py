@@ -13,15 +13,16 @@ def _reset_registry():
     curated.reset_registry()
 
 
-def test_list_ids_returns_nine_datasets():
+def test_list_ids_returns_ten_datasets():
     ids = curated.list_ids()
-    assert len(ids) == 9
+    assert len(ids) == 10
     assert ids == sorted(ids)
 
 
 def test_list_ids_specific_set():
     assert set(curated.list_ids()) == {
         "daily_summary",
+        "dispatch_constraints",
         "dispatch_price",
         "dispatch_region",
         "fcas_prices",

@@ -20,9 +20,9 @@ def _isolate_cache(tmp_path: Path, monkeypatch):
 
 # ---- Search edge cases ----
 
-async def test_search_caps_at_nine_datasets():
+async def test_search_caps_at_ten_datasets():
     out = await server.search_datasets("a", limit=100)
-    assert len(out) <= 9
+    assert len(out) <= 10
 
 
 async def test_search_empty_keyword_no_panic_in_haystack():
