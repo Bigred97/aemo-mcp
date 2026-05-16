@@ -77,6 +77,10 @@ class DataResponse(BaseModel):
         ),
     )
     unit: str | None = None
+    row_count: int = Field(
+        default=0,
+        description="Number of observation rows in records.",
+    )
     records: list[Observation] | list[dict[str, Any]] = Field(default_factory=list)
     csv: str | None = None
     source: str = "Australian Energy Market Operator"

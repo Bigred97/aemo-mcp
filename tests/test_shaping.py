@@ -235,6 +235,28 @@ def test_build_response_records_format():
     assert resp.csv is None
 
 
+def test_build_response_populates_row_count():
+    """row_count must equal len(records) — canonical portfolio uniformity."""
+    dataset = _fake_dispatch_price()
+    rows = [
+        {"SETTLEMENTDATE": "2026/05/14 10:00:00", "REGIONID": "NSW1", "RRP": "87.5"},
+        {"SETTLEMENTDATE": "2026/05/14 10:05:00", "REGIONID": "NSW1", "RRP": "88.0"},
+        {"SETTLEMENTDATE": "2026/05/14 10:10:00", "REGIONID": "QLD1", "RRP": "92.3"},
+    ]
+    resp = build_response(
+        dataset=dataset,
+        rows=rows,
+        sections_with_discriminator=None,
+        fmt="records",
+        user_query={},
+        source_url="http://x/",
+        start_period=None,
+        end_period=None,
+    )
+    assert resp.row_count == 3
+    assert resp.row_count == len(resp.records)
+
+
 def test_build_response_csv_format():
     dataset = _fake_dispatch_price()
     rows = [

@@ -245,6 +245,7 @@ def build_response(
         interval_end=resolved_end,
         period={"start": resolved_start, "end": resolved_end},
         unit=response_unit,
+        row_count=len(records),
         records=records,
         csv=csv_text,
         source_url=source_url,

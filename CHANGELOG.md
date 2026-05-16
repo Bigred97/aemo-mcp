@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1] - 2026-05-16
+
+### Added
+- `DataResponse.row_count`: number of observation rows. Closes the
+  last portfolio-uniformity gap — every sister's DataResponse now
+  carries the canonical row_count field.
+
 ## [0.4.0] - 2026-05-16
 
 ### Added — dispatch_constraints (DISPATCH.CONSTRAINT)
