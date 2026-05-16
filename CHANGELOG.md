@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.4.5] - 2026-05-16
+
+### Verified — no text-field bloat (portfolio playbook item #5)
+
+AEMO data is numeric — RRP, demand, SCADA megawatts, mwflow — and the
+non-numeric fields are short codes (region IDs are 4 chars; DUIDs cap at
+12 chars; CONSTRAINTID names cap around 30 chars; period timestamps are 25
+chars ISO-8601). Spot-check across `dispatch_price`, `dispatch_region`,
+`dispatch_constraints` confirmed max observation field length is 25
+characters — well under the 200-char "consider capping" threshold the
+playbook flags. No `cap_long_text` / `_truncate_field` helper needed.
+
+### Skipped — playbook item #6 (default-series ambiguity)
+
+AEMO datasets all carry explicit `dataset_id` discrimination (no
+default-series fallback semantics like rba `latest()` had); item #6
+is N/A for this sister.
+
 ## [0.4.4] - 2026-05-16
 
 ### Changed — sanitise user-facing error and schema strings
