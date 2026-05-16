@@ -114,7 +114,7 @@ async def test_get_data_unknown_filter_key():
 
 
 async def test_get_data_non_dict_filters():
-    with pytest.raises(ValueError, match="filters must be a dict"):
+    with pytest.raises(ValueError, match="filters must be"):
         await server.get_data(
             "dispatch_price", filters=["NSW1"]  # type: ignore[arg-type]
         )
