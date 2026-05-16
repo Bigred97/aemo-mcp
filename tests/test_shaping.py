@@ -12,6 +12,7 @@ from aemo_mcp.models import Observation
 from aemo_mcp.shaping import (
     NEM_TZ,
     _parse_aemo_datetime,
+    _resolve_dim_value,
     _safe_float,
     build_response,
     is_stale,
@@ -136,6 +137,55 @@ def test_records_to_observations_negative_price_preserved():
     assert obs[0].value == -15.40
 
 
+def test_resolve_dim_value_passes_through_when_no_lookup():
+    """Filters without `lookup` read the row column verbatim."""
+    f = CuratedFilter(key="region", description="x", column="REGIONID")
+    row = {"REGIONID": "NSW1"}
+    assert _resolve_dim_value(row, f) == "NSW1"
+
+
+def test_resolve_dim_value_returns_none_for_missing_column():
+    f = CuratedFilter(key="region", description="x", column="REGIONID")
+    assert _resolve_dim_value({}, f) is None
+    assert _resolve_dim_value({"REGIONID": ""}, f) is None
+    assert _resolve_dim_value({"REGIONID": "   "}, f) is None
+
+
+def test_resolve_dim_value_duid_to_region_lookup():
+    """The generation_scada bug: region dim must resolve via duid_lookup."""
+    f = CuratedFilter(
+        key="region",
+        description="x",
+        column="DUID",
+        lookup="duid_to_region",
+    )
+    # BW01 is Bayswater NSW1 black_coal in the bundled snapshot
+    assert _resolve_dim_value({"DUID": "BW01"}, f) == "NSW1"
+
+
+def test_resolve_dim_value_duid_to_fuel_lookup():
+    f = CuratedFilter(
+        key="fuel",
+        description="x",
+        column="DUID",
+        lookup="duid_to_fuel",
+    )
+    assert _resolve_dim_value({"DUID": "BW01"}, f) == "black_coal"
+    assert _resolve_dim_value({"DUID": "COOPGWF1"}, f) == "wind"
+
+
+def test_resolve_dim_value_unknown_duid_returns_none():
+    """Unknown DUIDs resolve to None — the dim is then omitted rather than
+    stamped with the DUID code (which was the original bug)."""
+    f = CuratedFilter(
+        key="region",
+        description="x",
+        column="DUID",
+        lookup="duid_to_region",
+    )
+    assert _resolve_dim_value({"DUID": "UNKNOWN_DUID_XYZ"}, f) is None
+
+
 def test_records_with_extra_dimensions():
     dataset = _fake_dispatch_price()
     rows = [
@@ -222,7 +272,7 @@ def test_build_response_records_format():
         sections_with_discriminator=None,
         fmt="records",
         user_query={"filters": {"region": "NSW1"}},
-        source_url="http://nemweb.com.au/test/",
+        source_url="https://www.nemweb.com.au/test/",
         start_period=None,
         end_period=None,
     )
@@ -231,7 +281,7 @@ def test_build_response_records_format():
     assert resp.records[0].value == 87.5  # type: ignore
     assert resp.source == "Australian Energy Market Operator"
     assert "AEMO" in resp.attribution
-    assert resp.source_url == "http://nemweb.com.au/test/"
+    assert resp.source_url == "https://www.nemweb.com.au/test/"
     assert resp.csv is None
 
 

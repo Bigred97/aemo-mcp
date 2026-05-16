@@ -60,7 +60,7 @@ def _mark_stale(reason: str) -> None:
     if not cur_stale:
         _stale_signal.set((True, reason))
 
-DEFAULT_BASE_URL = "http://nemweb.com.au"
+DEFAULT_BASE_URL = "https://www.nemweb.com.au"
 DEFAULT_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
 
 # IIS directory listings render entries as <A HREF="path">name</A>.

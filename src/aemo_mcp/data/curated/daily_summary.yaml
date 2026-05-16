@@ -14,7 +14,7 @@ description: |
 cadence: Daily
 cache_kind: daily
 settlement_column: SETTLEMENTDATE
-source_url: http://nemweb.com.au/Reports/Current/Daily_Reports/
+source_url: https://www.nemweb.com.au/Reports/Current/Daily_Reports/
 
 folders:
   - path: /Reports/Current/Daily_Reports/

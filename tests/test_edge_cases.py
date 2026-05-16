@@ -222,10 +222,10 @@ async def test_concurrent_latest_calls_dedup_to_one_http(tmp_path):
     )
 
     listing_call = respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
     ).respond(200, text=listing_html)
     zip_call = respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605150550_0000000456789012.zip"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605150550_0000000456789012.zip"
     ).respond(200, content=zip_body)
 
     cache = Cache(db_path=tmp_path / "c.db")

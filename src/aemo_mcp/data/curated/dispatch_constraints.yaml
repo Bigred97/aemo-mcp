@@ -23,7 +23,7 @@ description: |
 cadence: 5 min
 cache_kind: live
 settlement_column: SETTLEMENTDATE
-source_url: http://nemweb.com.au/Reports/Current/DispatchIS_Reports/
+source_url: https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/
 
 folders:
   - path: /Reports/Current/DispatchIS_Reports/

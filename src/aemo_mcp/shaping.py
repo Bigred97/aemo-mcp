@@ -17,11 +17,49 @@ import io
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from .curated import CuratedDataset
+from .curated import CuratedDataset, CuratedFilter
+from .duid_lookup import duid_info
 from .models import DataResponse, Observation
 
 # AEMO market time = UTC+10 (no DST — NEM is brisbane-aligned year-round).
 NEM_TZ = timezone(timedelta(hours=10), name="AEST")
+
+# Filter-side lookups that resolve a row column through a side table before
+# stamping the dimension. Maps `CuratedFilter.lookup` → duid_info() field.
+# Without this, generation_scada's region/fuel dims would stamp the DUID
+# verbatim (since DISPATCH.UNIT_SCADA only ships DUID + SCADAVALUE).
+_DUID_LOOKUPS: dict[str, str] = {
+    "duid_to_region": "region",
+    "duid_to_fuel": "fuel",
+}
+
+
+def _resolve_dim_value(row: dict[str, str], f: CuratedFilter) -> str | None:
+    """Return the dimension value to stamp on the observation for filter `f`.
+
+    For filters with no `lookup`, this is the row's column value verbatim.
+    For filters with a `lookup` (e.g. region/fuel on generation_scada), the
+    row column value is fed through duid_lookup.duid_info() and the resolved
+    field is returned. Returns None when the row has no value or the lookup
+    can't resolve.
+    """
+    col = f.column or f.key.upper()
+    raw = row.get(col)
+    if raw is None:
+        return None
+    raw = raw.strip() if isinstance(raw, str) else raw
+    if not raw:
+        return None
+    if not f.lookup:
+        return raw if isinstance(raw, str) else str(raw)
+    field = _DUID_LOOKUPS.get(f.lookup)
+    if field is None:
+        return raw if isinstance(raw, str) else str(raw)
+    info = duid_info(raw)
+    if info is None:
+        return None
+    val = info.get(field)
+    return val or None
 
 
 def _safe_float(v: Any) -> float | None:
@@ -84,10 +122,11 @@ def records_to_observations(
         period = _format_period(period_dt) or row.get(dataset.settlement_column, "")
         base_dims: dict[str, str] = dict(extra_dimensions or {})
         # Add every filter column the dataset declared as a dimension on the
-        # observation — REGIONID, INTERCONNECTORID, DUID, etc.
+        # observation — REGIONID, INTERCONNECTORID, DUID, etc. Filters that
+        # carry a `lookup` (eg region/fuel on generation_scada) are resolved
+        # via duid_lookup.duid_info() rather than read verbatim from the row.
         for f in dataset.filters:
-            col = f.column or f.key.upper()
-            val = row.get(col)
+            val = _resolve_dim_value(row, f)
             if val:
                 base_dims[f.key] = val
         for metric in dataset.metrics:

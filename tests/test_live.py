@@ -81,7 +81,7 @@ async def test_live_response_carries_attribution():
     resp = await server.latest("dispatch_price", filters={"region": "NSW1"})
     assert "AEMO" in resp.attribution
     assert "Copyright Permissions" in resp.attribution
-    assert resp.source_url.startswith("http://nemweb.com.au/")
+    assert resp.source_url.startswith("https://www.nemweb.com.au/")
 
 
 async def test_live_response_recent_not_stale():

@@ -32,6 +32,12 @@ class CuratedFilter:
     # Maps user-facing filter values → CSV row predicates. Each predicate is
     # a dict {column: value}. Most filters map 1:1 to a single column.
     column: str | None = None
+    # Optional resolver name for filters whose dim value is not the row column
+    # itself but a join against a side table. Recognised values:
+    #   "duid_to_region" — read DUID from row, resolve via duid_lookup.duid_info
+    #   "duid_to_fuel"   — read DUID from row, resolve via duid_lookup.duid_info
+    # Without a lookup, the row column's value is used verbatim.
+    lookup: str | None = None
 
 
 @dataclass(frozen=True)
@@ -73,7 +79,7 @@ class CuratedDataset:
     filters: tuple[CuratedFilter, ...] = ()
     metrics: tuple[CuratedMetric, ...] = ()
     settlement_column: str = "SETTLEMENTDATE"  # AEMO-standard period column
-    source_url: str = "http://nemweb.com.au/Reports/Current/"
+    source_url: str = "https://www.nemweb.com.au/Reports/Current/"
     search_keywords: tuple[str, ...] = ()
     examples: tuple[str, ...] = ()
 
@@ -134,6 +140,7 @@ def _parse_filter(raw: dict[str, Any]) -> CuratedFilter:
         values=tuple(raw.get("values") or ()),
         required=bool(raw.get("required", False)),
         column=raw.get("column"),
+        lookup=raw.get("lookup"),
     )
 
 
@@ -183,7 +190,7 @@ def _load_one(path: Path) -> CuratedDataset:
         filters=filters,
         metrics=metrics,
         settlement_column=str(raw.get("settlement_column", "SETTLEMENTDATE")),
-        source_url=str(raw.get("source_url", "http://nemweb.com.au/Reports/Current/")),
+        source_url=str(raw.get("source_url", "https://www.nemweb.com.au/Reports/Current/")),
         search_keywords=tuple(raw.get("search_keywords") or ()),
         examples=tuple(raw.get("examples") or ()),
     )

@@ -21,10 +21,10 @@ async def test_latest_dispatch_price_nsw(
     dispatchis_listing_html, dispatch_is_zip
 ):
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
     ).respond(200, text=dispatchis_listing_html)
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
     ).respond(200, content=dispatch_is_zip)
 
     resp = await server.latest("dispatch_price", filters={"region": "NSW1"})
@@ -39,10 +39,10 @@ async def test_latest_dispatch_price_negative_sa(
     dispatchis_listing_html, dispatch_is_zip
 ):
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
     ).respond(200, text=dispatchis_listing_html)
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
     ).respond(200, content=dispatch_is_zip)
 
     resp = await server.latest("dispatch_price", filters={"region": "SA1"})
@@ -54,10 +54,10 @@ async def test_get_data_all_regions_no_filter(
     dispatchis_listing_html, dispatch_is_zip
 ):
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
     ).respond(200, text=dispatchis_listing_html)
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
     ).respond(200, content=dispatch_is_zip)
 
     resp = await server.get_data("dispatch_price")
@@ -70,10 +70,10 @@ async def test_get_data_csv_format(
     dispatchis_listing_html, dispatch_is_zip
 ):
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
     ).respond(200, text=dispatchis_listing_html)
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
     ).respond(200, content=dispatch_is_zip)
 
     resp = await server.get_data(
@@ -89,10 +89,10 @@ async def test_latest_interconnector_flow(
     dispatchis_listing_html, dispatch_is_zip
 ):
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
     ).respond(200, text=dispatchis_listing_html)
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
     ).respond(200, content=dispatch_is_zip)
 
     resp = await server.latest(
@@ -110,10 +110,10 @@ async def test_latest_generation_scada_by_fuel(
     scada_listing_html, dispatch_scada_zip
 ):
     respx.get(
-        "http://nemweb.com.au/Reports/Current/Dispatch_SCADA/"
+        "https://www.nemweb.com.au/Reports/Current/Dispatch_SCADA/"
     ).respond(200, text=scada_listing_html)
     respx.get(
-        "http://nemweb.com.au/Reports/Current/Dispatch_SCADA/PUBLIC_DISPATCHSCADA_202605141000_0000000456789012.zip"
+        "https://www.nemweb.com.au/Reports/Current/Dispatch_SCADA/PUBLIC_DISPATCHSCADA_202605141000_0000000456789012.zip"
     ).respond(200, content=dispatch_scada_zip)
 
     resp = await server.latest(
@@ -129,10 +129,10 @@ async def test_latest_generation_scada_qld(
     scada_listing_html, dispatch_scada_zip
 ):
     respx.get(
-        "http://nemweb.com.au/Reports/Current/Dispatch_SCADA/"
+        "https://www.nemweb.com.au/Reports/Current/Dispatch_SCADA/"
     ).respond(200, text=scada_listing_html)
     respx.get(
-        "http://nemweb.com.au/Reports/Current/Dispatch_SCADA/PUBLIC_DISPATCHSCADA_202605141000_0000000456789012.zip"
+        "https://www.nemweb.com.au/Reports/Current/Dispatch_SCADA/PUBLIC_DISPATCHSCADA_202605141000_0000000456789012.zip"
     ).respond(200, content=dispatch_scada_zip)
 
     resp = await server.latest(
@@ -149,16 +149,16 @@ async def test_attribution_present_on_every_response(
     dispatchis_listing_html, dispatch_is_zip
 ):
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
     ).respond(200, text=dispatchis_listing_html)
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
     ).respond(200, content=dispatch_is_zip)
 
     resp = await server.latest("dispatch_price", filters={"region": "NSW1"})
     assert "AEMO" in resp.attribution
     assert "Copyright Permissions" in resp.attribution
-    assert resp.source_url.startswith("http://nemweb.com.au/")
+    assert resp.source_url.startswith("https://www.nemweb.com.au/")
     assert resp.source == "Australian Energy Market Operator"
 
 
@@ -167,10 +167,10 @@ async def test_server_version_carried_in_response(
     dispatchis_listing_html, dispatch_is_zip
 ):
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
     ).respond(200, text=dispatchis_listing_html)
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
     ).respond(200, content=dispatch_is_zip)
 
     resp = await server.latest("dispatch_price", filters={"region": "NSW1"})
@@ -191,10 +191,10 @@ async def test_search_then_describe_then_latest_flow(
     assert "region" in [f.key for f in detail.filters]
 
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
     ).respond(200, text=dispatchis_listing_html)
     respx.get(
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
     ).respond(200, content=dispatch_is_zip)
 
     resp = await server.latest(top.id, filters={"region": "NSW1"})

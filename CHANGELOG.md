@@ -1,5 +1,61 @@
 # Changelog
 
+## [0.4.6] - 2026-05-17
+
+### Changed — NEMWEB base URL hardened to `https://www.nemweb.com.au`
+
+`client.DEFAULT_BASE_URL` and every curated YAML's `source_url` now point at
+the canonical HTTPS host. NEMWEB has long served both `http://nemweb.com.au`
+and `https://www.nemweb.com.au` but only the latter carries a valid cert
+chain and survives modern HSTS preload — agents that block plain-http
+fetches stop seeing `SSLError` / `MaxRetryError` on first call.
+
+### Fixed — `generation_scada` region/fuel dims stamped DUID instead of resolving
+
+Bug repro at 0.4.5:
+```
+latest(dataset_id='generation_scada') →
+  records[0].dimensions = {
+    'duid': 'BW01', 'region': 'BW01', 'fuel': 'BW01', 'metric': 'scada_mw'
+  }
+```
+
+`DISPATCH.UNIT_SCADA` only carries `DUID` + `SCADAVALUE`, so the region and
+fuel filter columns in `generation_scada.yaml` aliased to `column: DUID`.
+At filter time we joined against the bundled DUID master to translate
+`region`/`fuel` into a DUID allow-set (already worked since 0.1.0). But
+at shaping time the same alias caused `shaping.records_to_observations`
+to stamp the raw DUID value into the region + fuel dims — customers
+couldn't group or join on either dimension even though `describe_dataset`
+advertised both as filterable.
+
+- `CuratedFilter` now carries an optional `lookup: str | None` field.
+  YAML filters set `lookup: duid_to_region` or `lookup: duid_to_fuel`
+  when the dim should be resolved via `duid_lookup.duid_info()` rather
+  than read verbatim from the row column.
+- `shaping._resolve_dim_value()` is the single place that consults the
+  lookup table — `records_to_observations` calls it for every filter
+  the dataset declares.
+- `generation_scada.yaml`: region and fuel filters now declare their
+  lookup. Other curated datasets are unchanged (no DUID-join semantics).
+- Unknown DUIDs (newer units not yet in the bundled snapshot) resolve
+  to `None` — the dim is omitted from the observation rather than
+  stamped with the DUID code. Customer code checking
+  `'region' in dimensions` gets the truth.
+- Wheel size unchanged — no new bundled fixtures. The fix is logic-only
+  on top of the existing `data/duid_snapshot.csv`.
+
+### Tests
+
+- `test_shaping.py`: 5 new tests covering `_resolve_dim_value` pass-through,
+  DUID-to-region/fuel lookup, unknown-DUID omission, and missing columns.
+- `test_regressions.py`: 3 new tests pinning the bug — region/fuel must
+  resolve via the lookup for known DUIDs (BW01, LY_W1, COOPGWF1, HPRG1),
+  unknown DUIDs must not stamp the DUID code into region/fuel, and
+  `describe_dataset('generation_scada')` continues to advertise the
+  filterable values.
+- 315 unit tests, 10x zero-flake.
+
 ## [0.4.5] - 2026-05-16
 
 ### Verified — no text-field bloat (portfolio playbook item #5)

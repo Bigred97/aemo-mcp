@@ -19,7 +19,7 @@ async def test_fetch_directory_listing_basic(tmp_path: Path, dispatchis_listing_
     client = AEMOClient(cache=cache)
     try:
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
         ).respond(200, text=dispatchis_listing_html)
 
         names = await client.fetch_directory_listing(
@@ -39,7 +39,7 @@ async def test_listing_lexicographic_max_is_latest(tmp_path: Path, dispatchis_li
     client = AEMOClient(cache=cache)
     try:
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
         ).respond(200, text=dispatchis_listing_html)
         names = await client.fetch_directory_listing(
             "/Reports/Current/DispatchIS_Reports/",
@@ -56,7 +56,7 @@ async def test_listing_excludes_parent_directory_link(tmp_path: Path, dispatchis
     client = AEMOClient(cache=cache)
     try:
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
         ).respond(200, text=dispatchis_listing_html)
         names = await client.fetch_directory_listing(
             "/Reports/Current/DispatchIS_Reports/",
@@ -74,7 +74,7 @@ async def test_listing_404_raises(tmp_path: Path):
     client = AEMOClient(cache=cache)
     try:
         respx.get(
-            "http://nemweb.com.au/Reports/Current/NoSuch/"
+            "https://www.nemweb.com.au/Reports/Current/NoSuch/"
         ).respond(404)
         with pytest.raises(AEMOAPIError, match="404"):
             await client.fetch_directory_listing("/Reports/Current/NoSuch/")
@@ -87,7 +87,7 @@ async def test_fetch_zip_returns_bytes(tmp_path: Path, dispatch_is_zip):
     cache = Cache(db_path=tmp_path / "c.db")
     client = AEMOClient(cache=cache)
     try:
-        url = "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+        url = "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
         respx.get(url).respond(200, content=dispatch_is_zip)
         body = await client.fetch_zip(url)
         assert body == dispatch_is_zip
@@ -100,7 +100,7 @@ async def test_fetch_zip_cached_on_second_call(tmp_path: Path, dispatch_is_zip):
     cache = Cache(db_path=tmp_path / "c.db")
     client = AEMOClient(cache=cache)
     try:
-        url = "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+        url = "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
         route = respx.get(url).respond(200, content=dispatch_is_zip)
         await client.fetch_zip(url)
         await client.fetch_zip(url)
@@ -116,7 +116,7 @@ async def test_in_flight_dedup_one_http_call(tmp_path: Path, dispatch_is_zip):
     cache = Cache(db_path=tmp_path / "c.db")
     client = AEMOClient(cache=cache)
     try:
-        url = "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+        url = "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
 
         async def slow_response(request):
             await asyncio.sleep(0.05)
@@ -135,7 +135,7 @@ async def test_fetch_zip_500_raises_api_error(tmp_path: Path):
     cache = Cache(db_path=tmp_path / "c.db")
     client = AEMOClient(cache=cache)
     try:
-        url = "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/X.zip"
+        url = "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/X.zip"
         respx.get(url).respond(500)
         with pytest.raises(AEMOAPIError, match="500"):
             await client.fetch_zip(url)
@@ -148,7 +148,7 @@ async def test_fetch_zip_network_error_raises_api_error(tmp_path: Path):
     cache = Cache(db_path=tmp_path / "c.db")
     client = AEMOClient(cache=cache)
     try:
-        url = "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/X.zip"
+        url = "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/X.zip"
         respx.get(url).mock(side_effect=httpx.ConnectError("network down"))
         with pytest.raises(AEMOAPIError, match="request failed"):
             await client.fetch_zip(url)
@@ -161,10 +161,10 @@ async def test_build_url_normalises_slashes(tmp_path: Path):
     client = AEMOClient(cache=cache)
     try:
         url = client.build_url("Reports/Current/DispatchIS_Reports", "X.zip")
-        assert url == "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/X.zip"
+        assert url == "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/X.zip"
 
         url = client.build_url("/Reports/Current/DispatchIS_Reports/", "X.zip")
-        assert url == "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/X.zip"
+        assert url == "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/X.zip"
     finally:
         await client.aclose()
 
@@ -176,7 +176,7 @@ async def test_listing_filters_by_regex(tmp_path: Path):
     client = AEMOClient(cache=cache)
     try:
         html = '<a href="/foo/PUBLIC_DISPATCHIS_X.zip">x</a><a href="/foo/IRRELEVANT.txt">i</a>'
-        respx.get("http://nemweb.com.au/foo/").respond(200, text=html)
+        respx.get("https://www.nemweb.com.au/foo/").respond(200, text=html)
         names = await client.fetch_directory_listing(
             "/foo/",
             filename_regex=re.compile(r"PUBLIC_DISPATCHIS_.*\.zip"),
@@ -196,7 +196,7 @@ async def test_client_sends_user_agent(tmp_path: Path):
             captured_ua.append(request.headers.get("User-Agent", ""))
             return httpx.Response(200, text="")
 
-        respx.get("http://nemweb.com.au/foo/").mock(side_effect=capture)
+        respx.get("https://www.nemweb.com.au/foo/").mock(side_effect=capture)
         await client.fetch_directory_listing("/foo/")
         assert "aemo-mcp-test/1.0" in captured_ua[0]
     finally:
@@ -252,7 +252,7 @@ async def test_stale_fallback_serves_cached_payload_on_5xx(
 
     db_path = tmp_path / "c.db"
     url = (
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
         "PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
     )
     # Prime a 2h-old cache entry — past the 60s live TTL, so cache.get()
@@ -290,7 +290,7 @@ async def test_stale_fallback_serves_cached_on_request_error(
 
     db_path = tmp_path / "c.db"
     url = (
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
         "PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
     )
     # 240h = 10 days, past the longest TTL (archive = 7 days), so a regular
@@ -322,7 +322,7 @@ async def test_raises_when_no_stale_cache_to_fall_back_to(tmp_path: Path):
 
     reset_stale_signal()
     url = (
-        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+        "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
         "PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
     )
     respx.get(url).respond(503, text="Service Unavailable")
@@ -342,16 +342,16 @@ async def test_cache_get_stale_returns_payload_and_timestamp(tmp_path: Path):
     from datetime import timedelta
 
     cache = Cache(db_path=tmp_path / "c.db")
-    await cache.set("http://nemweb.com.au/x", b"hello", kind="live")
+    await cache.set("https://www.nemweb.com.au/x", b"hello", kind="live")
     # Normal `get` with a tiny TTL should miss
-    fresh = await cache.get("http://nemweb.com.au/x", ttl=timedelta(seconds=0))
+    fresh = await cache.get("https://www.nemweb.com.au/x", ttl=timedelta(seconds=0))
     assert fresh is None
     # `get_stale` should return regardless of TTL
-    stale = await cache.get_stale("http://nemweb.com.au/x")
+    stale = await cache.get_stale("https://www.nemweb.com.au/x")
     assert stale is not None
     payload, cached_at = stale
     assert payload == b"hello"
     assert cached_at > 0
     # Non-existent key → None
-    miss = await cache.get_stale("http://nemweb.com.au/missing")
+    miss = await cache.get_stale("https://www.nemweb.com.au/missing")
     assert miss is None

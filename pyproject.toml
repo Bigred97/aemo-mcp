@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "aemo-mcp"
-version = "0.4.5"
+version = "0.4.6"
 description = "MCP server for the Australian Energy Market Operator (AEMO) NEM. Plain-English access to 5-min dispatch prices, regional demand, interconnector flows, generation by fuel, and rooftop PV."
 readme = "README.md"
 requires-python = ">=3.11"

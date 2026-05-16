@@ -176,10 +176,10 @@ async def test_fetch_dispatch_price_e2e(
     client = AEMOClient(cache=cache)
     try:
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
         ).respond(200, text=dispatchis_listing_html)
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
         ).respond(200, content=dispatch_is_zip)
 
         cd = get_curated("dispatch_price")
@@ -204,10 +204,10 @@ async def test_fetch_dispatch_price_all_regions(
     client = AEMOClient(cache=cache)
     try:
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
         ).respond(200, text=dispatchis_listing_html)
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
         ).respond(200, content=dispatch_is_zip)
 
         cd = get_curated("dispatch_price")
@@ -226,10 +226,10 @@ async def test_fetch_dispatch_region_metrics(
     client = AEMOClient(cache=cache)
     try:
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
         ).respond(200, text=dispatchis_listing_html)
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
         ).respond(200, content=dispatch_is_zip)
 
         cd = get_curated("dispatch_region")
@@ -250,10 +250,10 @@ async def test_fetch_interconnector_e2e(
     client = AEMOClient(cache=cache)
     try:
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
         ).respond(200, text=dispatchis_listing_html)
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
         ).respond(200, content=dispatch_is_zip)
 
         cd = get_curated("interconnector_flows")
@@ -279,10 +279,10 @@ async def test_fetch_generation_scada_filter_by_region(
     client = AEMOClient(cache=cache)
     try:
         respx.get(
-            "http://nemweb.com.au/Reports/Current/Dispatch_SCADA/"
+            "https://www.nemweb.com.au/Reports/Current/Dispatch_SCADA/"
         ).respond(200, text=scada_listing_html)
         respx.get(
-            "http://nemweb.com.au/Reports/Current/Dispatch_SCADA/PUBLIC_DISPATCHSCADA_202605141000_0000000456789012.zip"
+            "https://www.nemweb.com.au/Reports/Current/Dispatch_SCADA/PUBLIC_DISPATCHSCADA_202605141000_0000000456789012.zip"
         ).respond(200, content=dispatch_scada_zip)
 
         cd = get_curated("generation_scada")
@@ -307,10 +307,10 @@ async def test_fetch_generation_scada_filter_by_fuel(
     client = AEMOClient(cache=cache)
     try:
         respx.get(
-            "http://nemweb.com.au/Reports/Current/Dispatch_SCADA/"
+            "https://www.nemweb.com.au/Reports/Current/Dispatch_SCADA/"
         ).respond(200, text=scada_listing_html)
         respx.get(
-            "http://nemweb.com.au/Reports/Current/Dispatch_SCADA/PUBLIC_DISPATCHSCADA_202605141000_0000000456789012.zip"
+            "https://www.nemweb.com.au/Reports/Current/Dispatch_SCADA/PUBLIC_DISPATCHSCADA_202605141000_0000000456789012.zip"
         ).respond(200, content=dispatch_scada_zip)
 
         cd = get_curated("generation_scada")
@@ -330,7 +330,7 @@ async def test_fetch_listing_404_raises(tmp_path: Path):
     client = AEMOClient(cache=cache)
     try:
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
         ).respond(404)
         cd = get_curated("dispatch_price")
         with pytest.raises(FetchError, match="Could not list"):
@@ -355,10 +355,10 @@ async def test_fetch_with_period_window(
         target_min = (now - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M")
 
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
         ).respond(200, text=dispatchis_listing_html)
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"
         ).respond(200, content=dispatch_is_zip)
 
         cd = get_curated("dispatch_price")

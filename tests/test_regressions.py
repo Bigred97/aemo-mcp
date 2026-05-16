@@ -126,11 +126,11 @@ async def test_archive_path_excludes_current_segment(tmp_path: Path):
     try:
         # Mock the correct archive URL (no "Current")
         respx.get(
-            "http://nemweb.com.au/Reports/Archive/DispatchIS_Reports/"
+            "https://www.nemweb.com.au/Reports/Archive/DispatchIS_Reports/"
         ).respond(200, text='<a href="x.zip">x.zip</a>')
         # Also mock the (wrong) URL — if the bug regresses, this would be hit
         wrong = respx.get(
-            "http://nemweb.com.au/Reports/Archive/Current/DispatchIS_Reports/"
+            "https://www.nemweb.com.au/Reports/Archive/Current/DispatchIS_Reports/"
         ).respond(404)
 
         cd = curated.get("dispatch_price")
@@ -178,10 +178,10 @@ async def test_section_filter_skips_unrelated_folder(tmp_path: Path):
         # when user asked for ACTUAL only. We mock ACTUAL only; FORECAST
         # listing 404s.
         actual_listing = respx.get(
-            "http://nemweb.com.au/Reports/Current/ROOFTOP_PV/ACTUAL/"
+            "https://www.nemweb.com.au/Reports/Current/ROOFTOP_PV/ACTUAL/"
         ).respond(200, text='<a href="x">x</a>')
         forecast_listing = respx.get(
-            "http://nemweb.com.au/Reports/Current/ROOFTOP_PV/FORECAST/"
+            "https://www.nemweb.com.au/Reports/Current/ROOFTOP_PV/FORECAST/"
         ).respond(404)
 
         cd = curated.get("rooftop_pv")
@@ -331,11 +331,11 @@ async def test_failed_fetch_does_not_leak_future_exception_warning(tmp_path: Pat
     cache = Cache(db_path=tmp_path / "c.db")
     client = AEMOClient(cache=cache)
     try:
-        respx.get("http://nemweb.com.au/x.zip").respond(500)
+        respx.get("https://www.nemweb.com.au/x.zip").respond(500)
         with warnings.catch_warnings(record=True) as captured:
             warnings.simplefilter("always")
             try:
-                await client.fetch_zip("http://nemweb.com.au/x.zip")
+                await client.fetch_zip("https://www.nemweb.com.au/x.zip")
             except Exception:
                 pass
         # No "Future exception was never retrieved" warnings.
@@ -363,16 +363,16 @@ async def test_current_fetch_skips_individual_403(tmp_path: Path):
             '<a href="/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605150555_0000000456789012.zip">x</a>'
         )
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/"
         ).respond(200, text=listing)
         # First file rolled out → 403
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605150550_0000000456789010.zip"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605150550_0000000456789010.zip"
         ).respond(403)
         # Second is fine — return an empty/invalid body so we exercise the
         # error-tolerance path rather than the full parse path.
         respx.get(
-            "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605150555_0000000456789012.zip"
+            "https://www.nemweb.com.au/Reports/Current/DispatchIS_Reports/PUBLIC_DISPATCHIS_202605150555_0000000456789012.zip"
         ).respond(200, content=b"PK\x05\x06" + b"\x00" * 18)  # empty zip
 
         cd = curated.get("dispatch_price")
@@ -398,3 +398,91 @@ async def test_current_fetch_skips_individual_403(tmp_path: Path):
             assert "403" not in str(e)
     finally:
         await client.aclose()
+
+
+# =============================================================================
+# Bug: generation_scada stamped DUID into the region + fuel dimensions instead
+# of joining against the bundled DUID master. Repro at 0.4.5:
+#   latest(dataset_id='generation_scada') →
+#       {'duid': 'BW01', 'region': 'BW01', 'fuel': 'BW01', 'metric': 'scada_mw'}
+# Customers couldn't filter or group by region/fuel even though both were
+# advertised in describe_dataset. Fix lives in shaping._resolve_dim_value +
+# the `lookup:` field on the region/fuel filters in generation_scada.yaml.
+# =============================================================================
+
+def test_generation_scada_dims_resolve_region_and_fuel_not_duid():
+    """Smoking gun: the bug stamped DUID into region/fuel. After the fix,
+    region/fuel must be the looked-up values, not the DUID code.
+    """
+    from aemo_mcp.shaping import records_to_observations
+
+    cd = curated.get("generation_scada")
+    rows = [
+        {"SETTLEMENTDATE": "2026/05/14 10:00:00", "DUID": "BW01", "SCADAVALUE": "600"},
+        {"SETTLEMENTDATE": "2026/05/14 10:00:00", "DUID": "LY_W1", "SCADAVALUE": "520"},
+        {"SETTLEMENTDATE": "2026/05/14 10:00:00", "DUID": "COOPGWF1", "SCADAVALUE": "180"},
+        {"SETTLEMENTDATE": "2026/05/14 10:00:00", "DUID": "HPRG1", "SCADAVALUE": "90"},
+    ]
+    obs = records_to_observations(rows, cd)
+    by_duid = {o.dimensions["duid"]: o.dimensions for o in obs}
+
+    # Bayswater (NSW1 black coal) — the canonical sanity check
+    assert by_duid["BW01"]["region"] == "NSW1"
+    assert by_duid["BW01"]["fuel"] == "black_coal"
+    # Loy Yang A (VIC1 brown coal) — unambiguous since brown coal is VIC-only
+    assert by_duid["LY_W1"]["region"] == "VIC1"
+    assert by_duid["LY_W1"]["fuel"] == "brown_coal"
+    # Coopers Gap (QLD1 wind)
+    assert by_duid["COOPGWF1"]["region"] == "QLD1"
+    assert by_duid["COOPGWF1"]["fuel"] == "wind"
+    # Hornsdale Power Reserve (SA1 battery)
+    assert by_duid["HPRG1"]["region"] == "SA1"
+    assert by_duid["HPRG1"]["fuel"] == "battery"
+
+    # The bug had region/fuel == the DUID code — guard against regression.
+    for dims in by_duid.values():
+        assert dims["region"] != dims["duid"]
+        assert dims["fuel"] != dims["duid"]
+
+
+def test_generation_scada_unknown_duid_omits_region_and_fuel():
+    """When a DUID isn't in the bundled snapshot (older snapshot / newer unit),
+    we omit region/fuel rather than stamp the DUID code. Customer code that
+    branches on `'region' in dims` then sees the truth instead of a misleading
+    DUID echo.
+    """
+    from aemo_mcp.shaping import records_to_observations
+
+    cd = curated.get("generation_scada")
+    rows = [
+        {
+            "SETTLEMENTDATE": "2026/05/14 10:00:00",
+            "DUID": "UNKNOWN_DUID_XYZ",
+            "SCADAVALUE": "42",
+        }
+    ]
+    obs = records_to_observations(rows, cd)
+    assert len(obs) == 1
+    dims = obs[0].dimensions
+    assert dims["duid"] == "UNKNOWN_DUID_XYZ"
+    # Region/fuel must NOT be the DUID code — either resolved or absent.
+    assert dims.get("region") != "UNKNOWN_DUID_XYZ"
+    assert dims.get("fuel") != "UNKNOWN_DUID_XYZ"
+
+
+def test_generation_scada_describe_dataset_advertises_region_and_fuel_values():
+    """The bug's secondary failure: describe_dataset claimed region/fuel were
+    filterable, but the response dims used DUID for both. Verify the surface
+    metadata stays consistent with the resolved dims.
+    """
+    cd = curated.get("generation_scada")
+    detail = cd.to_detail()
+    filters = {f.key: f for f in detail.filters}
+    assert "region" in filters
+    assert "fuel" in filters
+    assert set(filters["region"].values) == {"NSW1", "QLD1", "SA1", "TAS1", "VIC1"}
+    expected_fuels = {
+        "black_coal", "brown_coal", "gas", "hydro",
+        "wind", "solar", "battery", "biomass", "distillate",
+    }
+    assert set(filters["fuel"].values) >= expected_fuels

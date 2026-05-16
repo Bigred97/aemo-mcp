@@ -154,14 +154,14 @@ async def test_latest_dispatch_price_filtered_is_bounded(tmp_path: Path):
         filenames = [
             "PUBLIC_DISPATCHIS_202605142355_0000000456789012.zip",
         ]
-        respx.get(f"http://nemweb.com.au{folder}").respond(
+        respx.get(f"https://www.nemweb.com.au{folder}").respond(
             200, text=_make_listing(folder, filenames)
         )
         csv_body = _make_dispatch_is_csv(intervals=288)
         zip_body = _zip_one(
             "PUBLIC_DISPATCHIS_202605142355_0000000456789012.CSV", csv_body
         )
-        respx.get(f"http://nemweb.com.au{folder}{filenames[0]}").respond(
+        respx.get(f"https://www.nemweb.com.au{folder}{filenames[0]}").respond(
             200, content=zip_body
         )
 
@@ -207,12 +207,12 @@ async def test_get_data_generation_scada_window_is_bounded(tmp_path: Path):
             f"PUBLIC_DISPATCHSCADA_2026051423{m:02d}_0000000456789012.zip"
             for m in [50, 55]
         ]
-        respx.get(f"http://nemweb.com.au{folder}").respond(
+        respx.get(f"https://www.nemweb.com.au{folder}").respond(
             200, text=_make_listing(folder, filenames)
         )
         for fn in filenames:
             csv_body = _make_scada_csv(intervals=288, duids=100)
-            respx.get(f"http://nemweb.com.au{folder}{fn}").respond(
+            respx.get(f"https://www.nemweb.com.au{folder}{fn}").respond(
                 200,
                 content=_zip_one(fn.replace(".zip", ".CSV"), csv_body),
             )
@@ -263,10 +263,10 @@ async def test_streaming_filter_rejects_unwanted_sections(tmp_path: Path):
         folder = "/Reports/Current/DispatchIS_Reports/"
         # Filename must match curated regex `PUBLIC_DISPATCHIS_\d{12}_\d+\.zip`
         filenames = ["PUBLIC_DISPATCHIS_202605142355_0000000456789012.zip"]
-        respx.get(f"http://nemweb.com.au{folder}").respond(
+        respx.get(f"https://www.nemweb.com.au{folder}").respond(
             200, text=_make_listing(folder, filenames)
         )
-        respx.get(f"http://nemweb.com.au{folder}{filenames[0]}").respond(
+        respx.get(f"https://www.nemweb.com.au{folder}{filenames[0]}").respond(
             200,
             content=_zip_one(
                 filenames[0].replace(".zip", ".CSV"),
@@ -306,10 +306,10 @@ async def test_streaming_path_high_cadence_filtered(
     try:
         folder = "/Reports/Current/DispatchIS_Reports/"
         filenames = ["PUBLIC_DISPATCHIS_202605141000_0000000456789012.zip"]
-        respx.get(f"http://nemweb.com.au{folder}").respond(
+        respx.get(f"https://www.nemweb.com.au{folder}").respond(
             200, text=_make_listing(folder, filenames)
         )
-        respx.get(f"http://nemweb.com.au{folder}{filenames[0]}").respond(
+        respx.get(f"https://www.nemweb.com.au{folder}{filenames[0]}").respond(
             200,
             content=_zip_one(
                 filenames[0].replace(".zip", ".CSV"),

@@ -15,7 +15,7 @@ description: |
 cadence: 30 min
 cache_kind: forecast
 settlement_column: DATETIME
-source_url: http://nemweb.com.au/Reports/Current/PredispatchIS_Reports/
+source_url: https://www.nemweb.com.au/Reports/Current/PredispatchIS_Reports/
 
 folders:
   - path: /Reports/Current/PredispatchIS_Reports/

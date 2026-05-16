@@ -14,7 +14,7 @@ description: |
 cadence: 5 min
 cache_kind: live
 settlement_column: SETTLEMENTDATE
-source_url: http://nemweb.com.au/Reports/Current/Dispatch_SCADA/
+source_url: https://www.nemweb.com.au/Reports/Current/Dispatch_SCADA/
 
 folders:
   - path: /Reports/Current/Dispatch_SCADA/
@@ -34,12 +34,14 @@ filters:
       snapshot — pass NSW1, QLD1, SA1, TAS1, or VIC1.
     values: [NSW1, QLD1, SA1, TAS1, VIC1]
     column: DUID
+    lookup: duid_to_region
   - key: fuel
     description: |
       Filter to units of the given fuel type. Resolved via the bundled DUID
       snapshot.
     values: [black_coal, brown_coal, gas, hydro, wind, solar, battery, biomass, distillate]
     column: DUID
+    lookup: duid_to_fuel
 
 metrics:
   - key: scada_mw
