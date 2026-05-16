@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.4.4] - 2026-05-16
+
+### Changed — sanitise user-facing error and schema strings
+
+Portfolio playbook item #3: strip implementation details from the strings
+agents see when something goes wrong.
+
+- `get_data` / `latest` AEMOAPIError message no longer name-drops the
+  `/Reports/Current/` NEMWEB path — replaced with the agent-actionable
+  "rolls files between current and archive" wording.
+- `_check_filter_keys` no longer suggests `Try describe_dataset('X')` —
+  the error now points to the valid-filters list directly so the agent
+  can correct itself without an extra tool call.
+- `get_data.filters` `Field(description=...)` no longer references
+  `describe_dataset(dataset_id)` by tool name. The filter-key surface is
+  described in terms of the dataset's own metadata.
+- `_fetch_current_zips` FetchError no longer leaks the internal
+  `folder.path` (e.g. `/Reports/Current/DispatchIS_Reports/`) — it
+  reports "Could not list NEMWEB directory for this dataset" instead.
+
+### Tests
+
+- `test_unknown_filter_key_suggests_close_match` updated to assert the
+  new wording. Other 306 tests unchanged. 307 unit tests, 10x zero-flake.
+- Source comments + dataclass docstrings (e.g. `# e.g. "DISPATCH.PRICE"`)
+  retain structural references — those are not user-facing.
+
 ## [0.4.3] - 2026-05-16
 
 ### Performance — streaming row filter for high-cadence feeds

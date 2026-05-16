@@ -531,7 +531,7 @@ async def _fetch_current_zips(
         )
     except AEMOAPIError as e:
         raise FetchError(
-            f"Could not list NEMWEB folder {folder.path}: {e}"
+            f"Could not list NEMWEB directory for this dataset: {e}"
         ) from e
 
     if not filenames:

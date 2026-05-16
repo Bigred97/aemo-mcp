@@ -201,7 +201,7 @@ def _check_filter_keys(dataset_id: str, filters: dict[str, Any] | None) -> None:
             f"Unknown filter key(s) {unknown} for dataset '{dataset_id}'. "
             f"{hint}"
             f"Valid keys: {known}. "
-            f"Try describe_dataset('{dataset_id}') to see filter definitions."
+            f"See the valid-filters list for '{dataset_id}' above."
         )
 
 
@@ -351,7 +351,8 @@ async def get_data(
                 "Dict of filter key → value(s). Common filters: 'region' "
                 "(NSW1/QLD1/SA1/TAS1/VIC1), 'interconnector' (V-SA/Basslink/...), "
                 "'duid' (unit ID), 'fuel' (black_coal/gas/wind/solar/battery/...). "
-                "Call describe_dataset(dataset_id) to see the valid filters."
+                "Each dataset's valid filter keys + allowed values are listed "
+                "in the dataset's detail metadata."
             ),
             examples=[
                 {"region": "NSW1"},
@@ -474,7 +475,7 @@ async def get_data(
     except AEMOAPIError as e:
         raise ValueError(
             f"NEMWEB request failed: {e}. "
-            f"NEMWEB occasionally rolls files in/out of /Reports/Current/; "
+            f"NEMWEB occasionally rolls files between current and archive; "
             f"try narrowing the period or retrying in 30s."
         ) from e
 
@@ -566,7 +567,7 @@ async def latest(
     except AEMOAPIError as e:
         raise ValueError(
             f"NEMWEB request failed: {e}. "
-            f"NEMWEB occasionally rolls files in/out of /Reports/Current/; "
+            f"NEMWEB occasionally rolls files between current and archive; "
             f"try retrying in 30s."
         ) from e
 

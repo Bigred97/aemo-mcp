@@ -230,7 +230,12 @@ async def test_unknown_dataset_lists_all_ids_when_no_close_match():
 
 
 async def test_unknown_filter_key_suggests_close_match():
-    """Misspelled filter keys should get a 'Did you mean X?' hint."""
+    """Misspelled filter keys should get a 'Did you mean X?' hint.
+
+    Post-0.4.4 the hint no longer references the `describe_dataset` MCP
+    tool by name (that's an internal implementation detail). It now
+    surfaces the valid-filters list directly.
+    """
     with pytest.raises(ValueError) as exc_info:
         await server.get_data(
             "dispatch_price", filters={"regiom": "NSW1"}  # typo of "region"
@@ -239,7 +244,14 @@ async def test_unknown_filter_key_suggests_close_match():
     assert "Did you mean 'region'" in msg, (
         f"filter-key error should suggest 'region': {msg}"
     )
-    assert "describe_dataset" in msg
+    # The error must list the valid filter keys so the agent can correct itself
+    # without bouncing through another tool call.
+    assert "Valid keys" in msg
+    assert "region" in msg
+    # Internal MCP-tool references must be stripped from error messages.
+    assert "describe_dataset" not in msg, (
+        f"error must not reference the describe_dataset tool: {msg}"
+    )
 
 
 async def test_unknown_format_suggests_close_match():
