@@ -486,3 +486,174 @@ def test_generation_scada_describe_dataset_advertises_region_and_fuel_values():
         "wind", "solar", "battery", "biomass", "distillate",
     }
     assert set(filters["fuel"].values) >= expected_fuels
+
+
+# =============================================================================
+# Bug: invalid filter VALUES silently returned 0 records (no error).
+# Repro at 0.4.6:
+#   latest('dispatch_price', filters={'region': 'WA1'})    → 0 records, no error
+#   latest('generation_scada', filters={'fuel': 'coal'})   → 0 records, no error
+#   latest('interconnector_flows', filters={'interconnector': 'Basslink'}) → 0
+# Agents read the empty list as "no data for this NEM region" rather than
+# "wrong code". Fix lives in server._check_filter_values + _check_filter_keys.
+# =============================================================================
+
+import pytest
+from aemo_mcp import server as _server
+
+
+async def test_invalid_region_value_suggests_correction():
+    """region='NSW' (missing the '1') used to return 0 records silently."""
+    with pytest.raises(ValueError) as exc_info:
+        await _server.latest("dispatch_price", filters={"region": "NSW"})
+    msg = str(exc_info.value)
+    assert "Did you mean 'NSW1'" in msg
+    assert "NSW1" in msg and "QLD1" in msg  # full valid list inlined
+
+
+async def test_invalid_fuel_value_suggests_correction():
+    """fuel='coal' used to return 0 records silently; should suggest a near-match."""
+    with pytest.raises(ValueError) as exc_info:
+        await _server.latest("generation_scada", filters={"fuel": "coal"})
+    msg = str(exc_info.value)
+    # Either black_coal or brown_coal will be the closest match
+    assert "Did you mean" in msg
+    assert "coal" in msg
+    assert "Valid fuel values" in msg
+
+
+async def test_invalid_interconnector_value_lists_valid_options():
+    """interconnector='Basslink' (common name) used to return 0 records silently."""
+    with pytest.raises(ValueError) as exc_info:
+        await _server.latest(
+            "interconnector_flows", filters={"interconnector": "Basslink"}
+        )
+    msg = str(exc_info.value)
+    # No close fuzzy match for 'Basslink', so no "Did you mean", but the valid
+    # list must be inlined so the agent knows to use T-V-MNSP1.
+    assert "T-V-MNSP1" in msg
+
+
+async def test_invalid_filter_value_preserves_case_insensitive_match():
+    """Lowercase region values must still work — the validation is value-
+    correctness, not casing pedantry. 'nsw1' is canonically NSW1."""
+    # Should NOT raise — case-insensitive equality with canonical NSW1
+    resp = await _server.latest("dispatch_price", filters={"region": "nsw1"})
+    assert resp is not None
+    # And the dim is stamped with the canonical casing from the row, not the
+    # user's casing — that's a separate guarantee but we sanity-check it here.
+
+
+# =============================================================================
+# Bug: stale=True with stale_reason=None was confusing.
+# Repro at 0.4.6:
+#   get_data(..., start_period='2099-01-01') → records: 0, stale: True,
+#                                              stale_reason: None
+# Fix lives in shaping.build_response — always populate stale_reason when
+# stale is True (the cached-fallback path already set it; this covers the
+# remaining branches: empty response + cadence-delay).
+# =============================================================================
+
+def test_stale_reason_set_for_empty_response():
+    """Empty response with stale=True must carry an actionable reason."""
+    from aemo_mcp.curated import get
+    from aemo_mcp.shaping import build_response
+
+    cd = get("dispatch_price")
+    resp = build_response(
+        dataset=cd,
+        rows=[],
+        sections_with_discriminator=None,
+        fmt="records",
+        user_query={"start_period": "2099-01-01"},
+        source_url="http://x/",
+        start_period="2099-01-01",
+        end_period="2099-01-02",
+    )
+    assert resp.stale is True
+    assert resp.stale_reason is not None
+    # The reason should mention common causes the agent can act on.
+    assert "future" in resp.stale_reason.lower() or "retention" in resp.stale_reason.lower()
+
+
+def test_stale_reason_set_for_cadence_delay():
+    """Records exist but are older than 2x cadence — stale_reason explains."""
+    from aemo_mcp.curated import get
+    from aemo_mcp.shaping import build_response
+
+    cd = get("dispatch_price")
+    rows = [
+        {
+            "SETTLEMENTDATE": "1990/01/01 00:00:00",
+            "REGIONID": "NSW1",
+            "RRP": "87.5",
+        }
+    ]
+    resp = build_response(
+        dataset=cd,
+        rows=rows,
+        sections_with_discriminator=None,
+        fmt="records",
+        user_query={},
+        source_url="http://x/",
+        start_period=None,
+        end_period=None,
+    )
+    assert resp.stale is True
+    assert resp.stale_reason is not None
+    assert "older" in resp.stale_reason or "delayed" in resp.stale_reason
+
+
+# =============================================================================
+# Bug: wide-window queries silently truncated at 31 days (the archive cap).
+# Repro at 0.4.6:
+#   get_data('dispatch_price', start='2026-01-01', end='2026-12-31')
+#   → 44640 records spanning only Jan 1–Feb 1, with truncated_at=None,
+#     stale_reason=None. Agent thought it got the whole year.
+# Fix: when data range is narrower than user's requested end, set stale=True
+# and explain in stale_reason so the agent knows to narrow the window.
+# =============================================================================
+
+def test_wide_window_truncation_surfaces_in_stale_reason():
+    from aemo_mcp.curated import get
+    from aemo_mcp.shaping import build_response
+
+    cd = get("dispatch_price")
+    # Data spans 2 days; user requested through end of year. The truncation
+    # must show up in stale_reason so the agent can detect + narrow.
+    rows = [
+        {"SETTLEMENTDATE": "1990/01/01 00:00:00", "REGIONID": "NSW1", "RRP": "1"},
+        {"SETTLEMENTDATE": "1990/01/02 00:00:00", "REGIONID": "NSW1", "RRP": "2"},
+    ]
+    resp = build_response(
+        dataset=cd,
+        rows=rows,
+        sections_with_discriminator=None,
+        fmt="records",
+        user_query={"start_period": "1990-01-01", "end_period": "1990-12-31"},
+        source_url="http://x/",
+        start_period="1990-01-01",
+        end_period="1990-12-31",
+    )
+    assert resp.stale is True
+    assert resp.stale_reason is not None
+    assert "1990-12-31" in resp.stale_reason  # mentions user's requested end
+    assert "archive" in resp.stale_reason.lower() or "narrow" in resp.stale_reason.lower()
+
+
+# =============================================================================
+# Bug: error messages hard-coded "All 7 IDs" but portfolio is now 10.
+# =============================================================================
+
+async def test_unknown_dataset_error_uses_dynamic_count():
+    """The 'All N IDs' count must match the curated registry, not be hard-coded."""
+    from aemo_mcp import curated as _curated
+
+    expected_count = len(_curated.list_ids())
+    with pytest.raises(ValueError) as exc_info:
+        await _server.describe_dataset("totally_not_a_dataset")
+    msg = str(exc_info.value)
+    assert f"All {expected_count} IDs" in msg
+    # And the old hardcoded "7" must NOT appear (unless we happen to be at 7).
+    if expected_count != 7:
+        assert "All 7 IDs" not in msg

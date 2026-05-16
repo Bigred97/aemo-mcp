@@ -276,6 +276,49 @@ def build_response(
     resolved_start = start_period or interval_start
     resolved_end = end_period or interval_end
 
+    # Surface a stale_reason whenever stale=True so agents don't see a bare
+    # `stale: true, stale_reason: null` and have to guess. The server layer
+    # overrides this for the cached-fallback path (it already sets a more
+    # specific reason in _fetch_with_stale_signal).
+    stale_reason: str | None = None
+    if stale:
+        if not all_obs:
+            stale_reason = (
+                "No NEMWEB data was returned for this query. The period may "
+                "be in the future, before NEMWEB retention, or excluded by "
+                "your filters. Try widening the window or removing filters."
+            )
+        elif interval_end is not None:
+            stale_reason = (
+                f"Latest observation {interval_end} is older than 2x the "
+                f"'{dataset.cadence}' cadence — the feed may be delayed or "
+                "the requested window pre-dates the most recent NEMWEB run."
+            )
+
+    # Detect silent truncation: user asked for a wider window than what we
+    # returned. AEMOClient caps /Archive/ at ~31 days per call (see
+    # fetch._MAX_CURRENT_FILES / MAX_ARCHIVE_DAYS) so a year-long query
+    # would otherwise look like it returned the full year. Surface the
+    # discrepancy via stale_reason without changing interval_start/end
+    # (those keep matching the user's request for caching/replay).
+    if (
+        all_obs
+        and end_period
+        and interval_end is not None
+        and end_period > interval_end[:10]
+    ):
+        truncation_note = (
+            f"Returned data covers {interval_start} to {interval_end}; "
+            f"your request was {start_period or interval_start} to {end_period}. "
+            "NEMWEB archive fetches cap at ~31 days per call — narrow the "
+            "window for the full range."
+        )
+        stale = True
+        stale_reason = (
+            truncation_note if stale_reason is None
+            else f"{truncation_note} ({stale_reason})"
+        )
+
     return DataResponse(
         dataset_id=dataset.id,
         dataset_name=dataset.name,
@@ -290,4 +333,5 @@ def build_response(
         source_url=source_url,
         retrieved_at=datetime.now(timezone.utc),
         stale=stale,
+        stale_reason=stale_reason,
     )

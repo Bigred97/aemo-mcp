@@ -200,9 +200,52 @@ def _check_filter_keys(dataset_id: str, filters: dict[str, Any] | None) -> None:
         raise ValueError(
             f"Unknown filter key(s) {unknown} for dataset '{dataset_id}'. "
             f"{hint}"
-            f"Valid keys: {known}. "
-            f"See the valid-filters list for '{dataset_id}' above."
+            f"Valid keys: {known}."
         )
+    # Validate filter values too — invalid values used to return 0 records
+    # silently, which agents misread as "no data" instead of "wrong code".
+    _check_filter_values(cd, filters)
+
+
+def _check_filter_values(
+    cd: curated.CuratedDataset, filters: dict[str, Any]
+) -> None:
+    """Validate filter values against each CuratedFilter's `values` enumeration.
+
+    Skips filters whose `values` is empty (open-ended like DUID or dataset
+    enumerations too large to inline). For closed enumerations (region,
+    interconnector, fuel, section, ...), raise on values not in the set —
+    matching the user's casing for the suggestion.
+
+    Pre-0.4.7, passing region='NSW' or fuel='coal' returned 0 records with
+    no signal; agents saw the empty list as "no data for this NEM region"
+    and gave up. Validation upfront produces a "Did you mean X?" hint.
+    """
+    for key, raw in filters.items():
+        if raw is None or raw == "" or raw == []:
+            continue
+        f = cd.get_filter(key)
+        if f is None or not f.values:
+            continue
+        # Build a canonical-value index for case-insensitive comparison.
+        canonical = {v.lower(): v for v in f.values}
+        # Accept a single string or a list of strings.
+        values_to_check: list[Any]
+        if isinstance(raw, list):
+            values_to_check = list(raw)
+        else:
+            values_to_check = [raw]
+        for val in values_to_check:
+            if not isinstance(val, str):
+                continue
+            if val.lower() in canonical:
+                continue
+            hint = _suggest(val, list(f.values))
+            raise ValueError(
+                f"Filter {key}={val!r} is not a valid value for dataset "
+                f"'{cd.id}'. {hint}"
+                f"Valid {key} values: {list(f.values)}."
+            )
 
 
 @mcp.tool
@@ -319,7 +362,7 @@ async def describe_dataset(
             f"Dataset {dataset_id!r} is not a known AEMO dataset. "
             f"{hint}"
             f"Try search_datasets() to discover valid IDs, or list_curated() "
-            f"to enumerate. All 7 IDs: {ids}"
+            f"to enumerate. All {len(ids)} IDs: {ids}"
         )
     return cd.to_detail()
 
@@ -458,7 +501,7 @@ async def get_data(
             f"Dataset {dataset_id!r} is not a known AEMO dataset. "
             f"{hint}"
             f"Try search_datasets() to discover valid IDs, or list_curated() "
-            f"to enumerate. All 7 IDs: {ids}"
+            f"to enumerate. All {len(ids)} IDs: {ids}"
         )
 
     try:
@@ -551,7 +594,7 @@ async def latest(
             f"Dataset {dataset_id!r} is not a known AEMO dataset. "
             f"{hint}"
             f"Try search_datasets() to discover valid IDs, or list_curated() "
-            f"to enumerate. All 7 IDs: {ids}"
+            f"to enumerate. All {len(ids)} IDs: {ids}"
         )
     try:
         return await _fetch_with_stale_signal(

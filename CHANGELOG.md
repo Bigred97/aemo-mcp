@@ -1,5 +1,66 @@
 # Changelog
 
+## [0.4.7] - 2026-05-17
+
+### Fixed — silent zero-result failures + missing `stale_reason`
+
+A friction audit found four real bugs that left agents misreading a
+"no signal" response as legitimate empty data:
+
+1. **Invalid filter values silently returned 0 records** — e.g.
+   `filters={"region": "NSW"}` (missing the `1` suffix),
+   `filters={"fuel": "coal"}` (vs `black_coal` / `brown_coal`),
+   `filters={"interconnector": "Basslink"}` (vs the formal `T-V-MNSP1`),
+   `filters={"region": "WA1"}` (WEM, not on the NEM). All four returned
+   `[]` with no error. Agents read the empty list as "no NEM data" and
+   moved on. `server._check_filter_values` now validates every supplied
+   filter value against the curated `values` enumeration (case-insensitive),
+   raising `ValueError` with a `Did you mean 'X'?` hint plus the full
+   valid list inlined. Filters with empty `values` (open-ended like DUID)
+   stay permissive.
+
+2. **`stale=True` with `stale_reason=None`** — empty / future-period queries
+   set `stale=True` but left the reason unset, so agents saw the flag
+   without an explanation. `shaping.build_response` now always populates
+   `stale_reason` whenever `stale=True`: distinct messages for the
+   no-data branch (suggesting future period / retention / over-filtering)
+   and the cadence-delay branch (quoting the latest observation timestamp).
+   The cached-fallback path in `server._fetch_with_stale_signal` was
+   already setting the reason and is unchanged.
+
+3. **Wide-window queries silently truncated at the 31-day archive cap** —
+   `get_data(start_period="2026-01-01", end_period="2026-12-31")` returned
+   only Jan 1 – Feb 1 of data but reported `interval_end="2026-12-31"`,
+   `truncated_at=None`, and `stale_reason=None`. Customers thought they
+   got the whole year. `shaping.build_response` now compares the user's
+   requested `end_period` against the actual `interval_end`; when the
+   request is wider, it sets `stale=True` and populates `stale_reason`
+   with "Returned data covers X to Y; your request was A to B. NEMWEB
+   archive fetches cap at ~31 days per call — narrow the window for
+   the full range." `interval_start/end` semantics are unchanged
+   (preserves backwards compat).
+
+4. **"All 7 IDs" in error messages** — three error sites in `server.py`
+   hard-coded the dataset count at 7, but the portfolio is now 10.
+   Switched to `len(ids)` so the count stays accurate as the registry
+   grows.
+
+### Deferred (audit polish, not bugs)
+
+- "Use ..." → "Try ..." wording consistency across `_validate_period`
+- `AEMOParseError` retry hints
+- Basslink / Heywood → formal interconnector ID auto-resolution (feature,
+  not a fix — `Basslink` now raises with the valid list, so the agent
+  can self-correct)
+- `duid_snapshot.csv` audit beyond known errors — see spawned follow-up
+
+### Tests
+
+- 8 new regression tests pinning each of the four bugs above (3 for
+  filter-value validation, 2 for `stale_reason`, 1 for the wide-window
+  signal, 1 for dynamic dataset count, plus 1 for case-insensitivity
+  preserved). 323 unit tests, 10x zero-flake.
+
 ## [0.4.6] - 2026-05-17
 
 ### Changed — NEMWEB base URL hardened to `https://www.nemweb.com.au`
