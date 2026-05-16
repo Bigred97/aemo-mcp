@@ -28,7 +28,13 @@ from .curated import (
 )
 from .duid_lookup import lookup_duids_for
 from .models import DataResponse
-from .parsing import AEMOParseError, find_sections, parse_csv, unzip
+from .parsing import (
+    AEMOParseError,
+    find_sections,
+    iter_csv_rows,
+    parse_csv,
+    unzip,
+)
 from .shaping import NEM_TZ, _parse_aemo_datetime, build_response
 
 # Filename pattern: AEMO embeds the interval timestamp as the first ~12-digit
@@ -123,6 +129,69 @@ def _parse_period(s: str | None) -> datetime | None:
         "(monthly), 'YYYY-MM-DD' (daily), or 'YYYY-MM-DD HH:MM' (5-min). "
         "Example: '2026-05-14' or '2026-05-14 09:00'."
     )
+
+
+def _needs_full_parse(dataset: CuratedDataset, folder: CuratedFolder) -> bool:
+    """True when the dataset needs the eager parse + dedup branch.
+
+    Multi-section folders (one CSV that contains both DREGION. v2 + v3, or
+    that fans out across PREDISPATCH.REGION_SOLUTION + REGION_PRICES) need
+    `parse_csv` so we can find matching sections and dedupe by version.
+    Single-section high-cadence folders (dispatch_price, generation_scada,
+    interconnector_flows) skip the full parse and stream rows directly,
+    which keeps peak RSS bounded for archive windows.
+    """
+    # No section filter → must keep all sections, which the streaming
+    # path doesn't support uniformly. Fall back to eager parse.
+    if not folder.sections:
+        return True
+    # Multiple curated sections in one folder (eg predispatch fan-out) →
+    # need to materialise so we can index by name.
+    if len(folder.sections) > 1:
+        return True
+    # Daily compendia carry duplicate section versions (DREGION. v2 + v3) —
+    # dedup happens across both, so we need the full parse to compare.
+    if dataset.cache_kind in ("daily", "archive"):
+        return True
+    return False
+
+
+def _stream_filtered_rows(
+    csv_bytes: bytes,
+    section_name: str,
+    dataset: CuratedDataset,
+    filters: dict[str, Any] | None,
+    resolved_duids: set[str] | None,
+    start_dt: datetime | None,
+    end_dt: datetime | None,
+) -> list[dict[str, str]]:
+    """Stream rows from one CSV, applying filters + period bounds inline.
+
+    Returns only the rows that pass every check. Peak memory is bounded by
+    the surviving row count, not the file's total row count.
+    """
+    keep: list[dict[str, str]] = []
+    settlement_col = dataset.settlement_column
+    has_period_bound = start_dt is not None or end_dt is not None
+    try:
+        for _sec, _ver, row in iter_csv_rows(
+            csv_bytes, target_section=section_name
+        ):
+            if not _row_matches_filters(row, dataset, filters, resolved_duids):
+                continue
+            if has_period_bound:
+                ts = _parse_aemo_datetime(row.get(settlement_col))
+                if ts is not None:
+                    if start_dt is not None and ts < start_dt:
+                        continue
+                    if end_dt is not None and ts > end_dt:
+                        continue
+            keep.append(row)
+    except AEMOParseError:
+        # A corrupt CSV in a multi-CSV archive shouldn't kill the whole
+        # response; the caller's outer loop continues with the next blob.
+        return keep
+    return keep
 
 
 def _row_matches_filters(
@@ -281,7 +350,36 @@ async def fetch_dataset(
                 else:
                     csv_blobs.append(inner_bytes)
 
+            use_streaming = not _needs_full_parse(dataset, folder)
+
             for csv_bytes in csv_blobs:
+                if use_streaming:
+                    # Fast path for single-section high-cadence feeds —
+                    # never materialise the full sections list, filter rows
+                    # inline. Peak memory is O(keepers), not O(file rows).
+                    cs = folder.sections[0]
+                    keep = _stream_filtered_rows(
+                        csv_bytes,
+                        cs.name,
+                        dataset,
+                        filters,
+                        resolved_duids,
+                        start_dt,
+                        end_dt,
+                    )
+                    if not keep:
+                        continue
+                    if (
+                        only_latest
+                        and not _is_forecast_folder(folder, dataset)
+                    ):
+                        keep = _filter_to_latest_per_group(keep, dataset)
+                    discriminator = cs.discriminator or folder.discriminator
+                    sections_with_discriminator.append((discriminator, keep))
+                    continue
+
+                # Eager path — needed for multi-section folders and the
+                # DREGION. v2+v3 dedup case in daily archives.
                 try:
                     sections = parse_csv(csv_bytes)
                 except AEMOParseError:

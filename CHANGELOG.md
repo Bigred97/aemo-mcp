@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.4.3] - 2026-05-16
+
+### Performance — streaming row filter for high-cadence feeds
+
+The 5-minute NEM dispatch feeds are the highest-volume datasets in the
+portfolio. Pre-0.4.3, `fetch_dataset` would call `parse_csv` to materialise
+the full sections list (including DISPATCH.REGIONSUM + INTERCONNECTORRES
+sections that `dispatch_price` doesn't even need) before filtering rows in
+Python. A multi-day archive window would spike peak RSS above 100MB.
+
+- Added `parsing.iter_csv_rows(body, target_section=...)` — streaming
+  iterator that yields one `(section_name, version, row_dict)` tuple at a
+  time without ever holding the full sections list in memory. `target_section`
+  short-circuits D-row construction for unwanted sections.
+- Added `fetch._stream_filtered_rows` — applies row filter + period bounds +
+  resolved-DUID allow-set inline so peak memory is O(keepers), not O(file
+  rows).
+- Wired the high-cadence single-section feeds (`dispatch_price`,
+  `dispatch_region`, `interconnector_flows`, `generation_scada`,
+  `dispatch_constraints`, `trading_price`, `fcas_prices`) through the
+  streaming path. The eager `parse_csv` branch is retained for daily
+  archives (DREGION. v2+v3 dedup) and multi-section folders (predispatch
+  fan-out).
+
+### Tests
+
+- New `tests/test_resilience.py` (6 tests) with explicit time + peak-memory
+  bounds, mocked NEMWEB via respx. Empirical numbers on the dev machine:
+  - `latest('dispatch_price', filters={'region': 'NSW1'})`:
+    140ms / 2.1MB peak (bound: <3s / <50MB).
+  - `get_data('generation_scada', filters={'region': 'NSW1'}, period=10min)`:
+    940ms / 9.7MB peak (bound: <10s / <100MB).
+- 307 unit tests passing (was 301).
+
 ## [0.4.2] - 2026-05-16
 
 ### Fixed — JSON-string `filters` parameter (portfolio-wide)
