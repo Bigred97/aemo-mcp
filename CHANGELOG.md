@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.8] - 2026-05-17
+
+### Improved — transport-agnostic Field descriptions
+
+Three `Field(description=...)` strings in `server.py` referenced
+MCP-tool-name (`search_datasets()`, `list_curated()`). These
+descriptions become part of the parameter schema, so REST-gateway
+customers hitting `/v1/{describe,get-data,latest}/...` saw "Use
+search_datasets() to discover" — confusing because they're not calling
+a Python function. Rewrote to the "{endpoint or tool}" form. Matches
+the ato 0.8.7 / rba 0.7.5 portfolio guard. No runtime behaviour change.
+
 ## [0.4.7] - 2026-05-17
 
 ### Fixed — silent zero-result failures + missing `stale_reason`

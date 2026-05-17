@@ -82,20 +82,20 @@ def _normalize_dataset_id(dataset_id: Any) -> str:
     if not isinstance(dataset_id, str):
         raise ValueError(
             f"dataset_id must be a string, got {type(dataset_id).__name__}. "
-            "Try search_datasets() to discover IDs like 'dispatch_price' or "
+            "Search by keyword to discover IDs like 'dispatch_price' or "
             "'generation_scada'."
         )
     normalized = dataset_id.strip().lower()
     if not normalized:
         raise ValueError(
-            "dataset_id is empty. Try search_datasets() to discover IDs "
+            "dataset_id is empty. Search by keyword to discover IDs "
             "like 'dispatch_price' or 'generation_scada'."
         )
     if not _DATASET_ID_PATTERN.match(normalized):
         raise ValueError(
             f"dataset_id {dataset_id!r} contains invalid characters — "
             "use snake_case ASCII like 'dispatch_price', 'generation_scada'. "
-            "Try search_datasets() to discover valid IDs."
+            "Search by keyword to discover valid IDs."
         )
     return normalized
 
@@ -326,8 +326,9 @@ async def describe_dataset(
         Field(
             description=(
                 "Dataset ID like 'dispatch_price', 'generation_scada'. "
-                "Use search_datasets() to discover, or list_curated() to "
-                "enumerate. Case-insensitive."
+                "Use the search endpoint or search tool to discover, or "
+                "the list-curated endpoint/tool to enumerate. "
+                "Case-insensitive."
             ),
             examples=[
                 "dispatch_price",
@@ -361,8 +362,8 @@ async def describe_dataset(
         raise ValueError(
             f"Dataset {dataset_id!r} is not a known AEMO dataset. "
             f"{hint}"
-            f"Try search_datasets() to discover valid IDs, or list_curated() "
-            f"to enumerate. All {len(ids)} IDs: {ids}"
+            f"Search by keyword or enumerate the curated set to discover IDs. "
+            f"All {len(ids)} IDs: {ids}"
         )
     return cd.to_detail()
 
@@ -373,8 +374,8 @@ async def get_data(
         str,
         Field(
             description=(
-                "Dataset ID like 'dispatch_price'. Use search_datasets() to "
-                "discover."
+                "Dataset ID like 'dispatch_price'. Use the search endpoint "
+                "or search tool to discover."
             ),
             examples=[
                 "dispatch_price",
@@ -500,8 +501,8 @@ async def get_data(
         raise ValueError(
             f"Dataset {dataset_id!r} is not a known AEMO dataset. "
             f"{hint}"
-            f"Try search_datasets() to discover valid IDs, or list_curated() "
-            f"to enumerate. All {len(ids)} IDs: {ids}"
+            f"Search by keyword or enumerate the curated set to discover IDs. "
+            f"All {len(ids)} IDs: {ids}"
         )
 
     try:
@@ -529,8 +530,8 @@ async def latest(
         str,
         Field(
             description=(
-                "Dataset ID like 'dispatch_price'. Use search_datasets() to "
-                "discover."
+                "Dataset ID like 'dispatch_price'. Use the search endpoint "
+                "or search tool to discover."
             ),
             examples=[
                 "dispatch_price",
@@ -593,8 +594,8 @@ async def latest(
         raise ValueError(
             f"Dataset {dataset_id!r} is not a known AEMO dataset. "
             f"{hint}"
-            f"Try search_datasets() to discover valid IDs, or list_curated() "
-            f"to enumerate. All {len(ids)} IDs: {ids}"
+            f"Search by keyword or enumerate the curated set to discover IDs. "
+            f"All {len(ids)} IDs: {ids}"
         )
     try:
         return await _fetch_with_stale_signal(
